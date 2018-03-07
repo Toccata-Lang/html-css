@@ -1,0 +1,348 @@
+
+(defprotocol PageElement
+  (html [_]
+    (assert-result x (instance? Vector x)))
+
+  (css [_]
+    (assert-result x (instance? Vector x))))
+
+(extend-type String
+  PageElement
+  (css [_]
+    [])
+  (html [s]
+    [s]))
+
+(extend-type List
+  PageElement
+  (html [l]
+    (reduce l [] (fn [v x]
+                   (conj v (html x)))))
+  (css [l]
+    (reduce l [] (fn [v x]
+                   (conj v (css x))))))
+
+(extend-type Vector
+  PageElement
+  (html [v]
+    (map v html))
+  (css [v]
+    (map v css)))
+
+
+(deftype StyleAttribute [name value]
+  PageElement
+  (html [_] [name ": " (html value) ";"]))
+
+(deftype Styling [styles]
+  (assert (instance? Vector styles))
+  
+  Collection
+  (conj [_ v]
+    (assert (instance? StyleAttribute v))
+
+    (Styling (conj styles v)))
+  (filter [_ f]
+    (Styling (filter styles f)))
+
+  PageElement
+  (html [_]
+    (either (and (first styles)
+                 (maybe (comp ["style=\""]
+                              (-> styles
+                                  (reduce [] (fn [v styling]
+                                               (conj v (html styling))))
+                                  (interpose "\n")
+                                  vec
+                                  (conj "\"")))))
+            [])))
+
+(def empty-style (Styling []))
+
+
+(deftype Class [name styling]
+  (assert (instance? Styling styling))
+  
+  PageElement
+  (css [_]
+    ["." name "{\n" (vec (interpose (map (.styles styling) html) "\n")) "\n}\n"]))
+
+(deftype Classes [classes]
+  (assert (instance? HashMap classes))
+  
+  Collection
+  (conj [_ v]
+    (assert (instance? Class v))
+
+    (Classes (assoc classes (.name v) v)))
+  
+
+  PageElement
+  (html [_]
+    (either (and (empty? classes)
+                 (maybe []))
+            (comp ["class=\""]
+                  (conj (-> classes
+                            keys
+                            (interpose ", ")
+                            vec)
+                        "\""))))
+
+  (css [_]
+    (flat-map (vec (vals classes)) css)))
+
+(def empty-class (Classes {}))
+
+(defn class [name]
+  (Class name empty-style))
+
+
+(deftype PageHead [contents styling attributes class id]
+  (assert (instance? Classes class))
+  (assert (instance? Styling styling))
+
+  PageElement
+  (html [_]
+    ["<head>\n"
+     (html contents)
+     "\n</head>"]))
+
+(deftype PageBody [contents styling attributes class id]
+  (assert (instance? Classes class))
+  (assert (instance? Styling styling))
+
+  PageElement
+  (html [_]
+    ["\n<body " (html styling) ">\n"
+     (html contents)
+     "\n</body>"])
+
+  (css [_]
+    (css contents)))
+
+(deftype Anchor [contents url styling attributes class id]
+  (assert (instance? Classes class))
+  (assert (instance? Styling styling))
+
+  PageElement
+  (html [_]
+    ["<a href=\"" url "\"\n"
+     (either (= id "")
+             (maybe ["id=\"" id "\" "]))
+     (html class)
+     (html styling) ">\n"
+     (html contents)
+     "</a>"])
+
+  (css [_] [(css class)
+            (css contents)]))
+
+(deftype ContainerTag [name contents styling attributes class id]
+  (assert (instance? Classes class))
+  (assert (instance? Styling styling))
+
+  PageElement
+  (html [_]
+    ["\n<" name " "
+     (either (= id "")
+             (maybe ["id=\"" id "\" "]))
+     (html class)
+     (html styling) ">"
+     (html contents)
+     "\n</" name ">"])
+
+  (css [_] [(css class)
+            (css contents)]))
+
+(defn container-tag [name]
+  (fn div [& contents]
+    (ContainerTag name (vec contents) empty-style {} empty-class "")))
+
+(extend-type Class
+  Function
+  (invoke [class element]
+    (.class element (conj (.class element) class))))
+
+
+(deftype px [size]
+  (assert (instance? Integer size))
+  
+  PageElement
+  (html [_] [(str size) "px"]))
+
+(deftype percent [size]
+  (assert (instance? Integer size))
+  
+  PageElement
+  (html [_] [(str size) "%"]))
+
+(def SizeValue (comp px percent))
+
+(def cover (reify
+             PageElement
+             (html [_] ["cover"])))
+
+(deftype NamedColor [color]
+  PageElement
+  (html [_] [color]))
+
+(def white (NamedColor "white"))
+
+
+(deftype HexColor [color]
+  PageElement
+  (html [_] ["#" color]))
+
+(defn hex-color [s]
+  ;; TODO: validate color string to only contain hex digits
+  (HexColor s))
+
+(def ColorValue (comp HexColor
+                      NamedColor))
+
+(def row (reify
+           PageElement
+           (html [_] ["row"])))
+
+(def column (reify
+              PageElement
+              (html [_] ["column"])))
+
+(def flex (reify
+            PageElement
+            (html [_] ["flex"])))
+
+(def flex-end (reify
+              PageElement
+              (html [_] ["flex-end"])))
+
+(def center (reify
+              PageElement
+              (html [_] ["center"])))
+
+(def space-between (reify
+                     PageElement
+                     (html [_] ["space-between"])))
+
+(def fixed (reify
+             PageElement
+             (html [_] ["fixed"])))
+
+
+
+(defn add-style [element attr-name value]
+  (.styling element (-> (.styling element)
+                        (remove (fn [style]
+                                  (and (instance? StyleAttribute style)
+                                       (= attr-name (.name style)))))
+                        (conj (StyleAttribute attr-name value)))))
+
+
+(def PositionValue (comp fixed))
+
+(defn position [element value]
+  (assert (instance? PositionValue value))
+  (add-style element "position" value))
+
+(def BackgroundAttachmentValue (comp fixed))
+
+(defn background-attachment [element value]
+  (assert (instance? BackgroundAttachmentValue value))
+  (add-style element "background-attachment" value))
+
+(defn background-fixed [element]
+  (background-attachment element fixed))
+
+(def BackgroundSizeValue (comp cover SizeValue))
+
+(defn background-size [element value]
+  (assert (instance? BackgroundSizeValue value))
+  (add-style element "background-size" value))
+
+(defn background-cover [element]
+  (background-size element cover))
+
+(defn background-image [element img-url]
+  (add-style element "background-image" (str "url(" img-url ")")))
+
+(defn background-color [element value]
+  (assert (instance? ColorValue value))
+  (add-style element "background-color" value))
+
+(defn width [element value]
+  (assert (instance? SizeValue value))
+  (add-style element "width" value))
+
+(defn color [element value]
+  (assert (instance? ColorValue value))
+  (add-style element "color" value))
+
+(def DisplayValue (comp flex))
+
+(defn display [element value]
+  (assert (instance? DisplayValue value))
+  (add-style element "display" value))
+
+(defn flex-row [element]
+  (-> element
+      (display flex)
+      (add-style "flex-direction" row)))
+
+(defn flex-column [element]
+  (-> element
+      (display flex)
+      (add-style "flex-direction" column)))
+
+(def Justification (comp center
+                         flex-end
+                         space-between))
+
+(defn justify-content [element value]
+  (assert (instance? Justification value))
+  (add-style element "justify-content" value))
+
+(defn page-head [& contents]
+  (PageHead contents empty-style {} empty-class ""))
+
+(defn page-body [& contents]
+  (PageBody contents empty-style {} empty-class ""))
+
+(defn anchor [contents url]
+  (Anchor contents url empty-style {} empty-class ""))
+
+(def div (container-tag "div"))
+(def article (container-tag "article"))
+(def aside (container-tag "aside"))
+(def details (container-tag "details"))
+(def footer (container-tag "footer"))
+(def header (container-tag "header"))
+(def hgroup (container-tag "hgroup"))
+(def menu (container-tag "menu"))
+(def nav (container-tag "nav"))
+(def section (container-tag "section"))
+(def ol (container-tag "ol"))
+(def ul (container-tag "ul"))
+
+(deftype HTMLPage [head body]
+  (assert (instance? PageHead head))
+  (assert (instance? PageBody body))
+
+  PageElement
+  (html [_]
+    ["<!DOCTYPE html>\n"
+     (html head)
+     (html body)]))
+
+(deftype title [title-str]
+  (assert (instance? String title-str))
+  
+  PageElement
+  (html [_]
+    ["<title>" title-str "</title>\n"]))
+
+(deftype style-css [contents]
+  PageElement
+  (html [_]
+    ["<style type=\"text/css\">\n"
+     (css contents)
+     "\n</style>"]))
