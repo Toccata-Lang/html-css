@@ -3,36 +3,95 @@
   (html [_]
     (assert-result x (instance? Vector x)))
 
-  (css [_]
-    (assert-result x (instance? Vector x))))
+  (css [_ classes]
+    (assert (instance? HashMap classes))
+    (assert-result x (instance? HashMap x))))
+
+(extend-type Integer
+  PageElement
+  (css [_ classes]
+    classes)
+  (html [n]
+    [(str n)]))
+
+(extend-type Symbol
+  PageElement
+  (css [_ classes]
+    classes)
+  (html [s]
+    [(str s)]))
 
 (extend-type String
   PageElement
-  (css [_]
-    [])
+  (css [_ classes]
+    classes)
   (html [s]
     [s]))
+
+(extend-type HashMap
+  PageElement
+  (html [m]
+    (-> m
+        seq
+        (map (fn [[k v]]
+               [(str k "=\"" v "\"")]))
+        (interpose "\n")
+        vec)))
 
 (extend-type List
   PageElement
   (html [l]
     (reduce l [] (fn [v x]
                    (conj v (html x)))))
-  (css [l]
-    (reduce l [] (fn [v x]
-                   (conj v (css x))))))
+  (css [l classes]
+    (reduce l classes (fn [classes x]
+                        (css x classes)))))
 
 (extend-type Vector
   PageElement
   (html [v]
     (map v html))
-  (css [v]
-    (map v css)))
+  (css [v classes]
+    (reduce v classes (fn [classes x]
+                        (css x classes)))))
+
+;; values that are also types
+(def row (reify PageElement
+           (html [_]
+             ["row"])))
+(def column (reify PageElement (html [_] ["column"])))
+(def cover (reify PageElement (html [_] ["cover"])))
+(def flex (reify PageElement (html [_] ["flex"])))
+(def flex-end (reify PageElement (html [_] ["flex-end"])))
+(def center (reify PageElement (html [_] ["center"])))
+(def space-between (reify PageElement (html [_] ["space-between"])))
+(def fixed (reify PageElement (html [_] ["fixed"])))
+(def auto (reify PageElement (html [_] ["auto"])))
+(def none (reify PageElement (html [_] ["none"])))
+(def disc (reify PageElement (html [_] ["disc"])))
+(def circle (reify PageElement (html [_] ["circle"])))
+(def square (reify PageElement (html [_] ["square"])))
+(def decimal (reify PageElement (html [_] ["decimal"])))
+(def lower-roman (reify PageElement (html [_] ["lower-roman"])))
+(def upper-roman (reify PageElement (html [_] ["upper-roman"])))
+(def lower-alpha (reify PageElement (html [_] ["lower-alpha"])))
+(def lower-latin (reify PageElement (html [_] ["lower-latin"])))
+(def upper-alpha (reify PageElement (html [_] ["upper-alpha"])))
+(def upper-latin (reify PageElement (html [_] ["upper-latin"])))
+(def solid (reify PageElement (html [_] ["solid"]))) 
+(def hidden (reify PageElement (html [_] ["hidden"]))) 
+(def dotted (reify PageElement (html [_] ["dotted"]))) 
+(def dashed (reify PageElement (html [_] ["dashed"]))) 
+(def double (reify PageElement (html [_] ["double"]))) 
+(def groove (reify PageElement (html [_] ["groove"]))) 
+(def ridge (reify PageElement (html [_] ["ridge"]))) 
+(def inset (reify PageElement (html [_] ["inset"]))) 
+(def outset (reify PageElement (html [_] ["outset"]))) 
 
 
 (deftype StyleAttribute [name value]
   PageElement
-  (html [_] [name ": " (html value) ";"]))
+  (html [_] [name ": " (vec (interpose (html value) " ")) ";"]))
 
 (deftype Styling [styles]
   (assert (instance? Vector styles))
@@ -59,13 +118,15 @@
 
 (def empty-style (Styling []))
 
-
 (deftype Class [name styling]
   (assert (instance? Styling styling))
   
+  Stringable
+  (string-list [_] (list "<CSS-Class " name ">"))
+
   PageElement
-  (css [_]
-    ["." name "{\n" (vec (interpose (map (.styles styling) html) "\n")) "\n}\n"]))
+  (css [class classes]
+    (assoc classes name class)))
 
 (deftype Classes [classes]
   (assert (instance? HashMap classes))
@@ -73,10 +134,8 @@
   Collection
   (conj [_ v]
     (assert (instance? Class v))
-
     (Classes (assoc classes (.name v) v)))
   
-
   PageElement
   (html [_]
     (either (and (empty? classes)
@@ -88,8 +147,9 @@
                             vec)
                         "\""))))
 
-  (css [_]
-    (flat-map (vec (vals classes)) css)))
+  (css [_ classes-map]
+    (reduce (vals classes) classes-map (fn [m class]
+                                         (css class m)))))
 
 (def empty-class (Classes {}))
 
@@ -97,66 +157,40 @@
   (Class name empty-style))
 
 
-(deftype PageHead [contents styling attributes class id]
-  (assert (instance? Classes class))
-  (assert (instance? Styling styling))
-
-  PageElement
-  (html [_]
-    ["<head>\n"
-     (html contents)
-     "\n</head>"]))
-
-(deftype PageBody [contents styling attributes class id]
-  (assert (instance? Classes class))
-  (assert (instance? Styling styling))
-
-  PageElement
-  (html [_]
-    ["\n<body " (html styling) ">\n"
-     (html contents)
-     "\n</body>"])
-
-  (css [_]
-    (css contents)))
-
-(deftype Anchor [contents url styling attributes class id]
-  (assert (instance? Classes class))
-  (assert (instance? Styling styling))
-
-  PageElement
-  (html [_]
-    ["<a href=\"" url "\"\n"
-     (either (= id "")
-             (maybe ["id=\"" id "\" "]))
-     (html class)
-     (html styling) ">\n"
-     (html contents)
-     "</a>"])
-
-  (css [_] [(css class)
-            (css contents)]))
-
-(deftype ContainerTag [name contents styling attributes class id]
+(deftype Tag [name contents styling attributes class]
   (assert (instance? Classes class))
   (assert (instance? Styling styling))
 
   PageElement
   (html [_]
     ["\n<" name " "
-     (either (= id "")
-             (maybe ["id=\"" id "\" "]))
-     (html class)
-     (html styling) ">"
-     (html contents)
-     "\n</" name ">"])
+     (-> [(html class)
+          (html attributes)
+          (html styling)]
+         (remove empty?)
+         (interpose "\n")
+         vec)
+     (either (and (empty? contents)
+                  (maybe "/>"))
+             [">" (html contents) "\n</" name ">"])])
 
-  (css [_] [(css class)
-            (css contents)]))
+  (css [_ classes]
+    (css contents (css class classes))))
 
-(defn container-tag [name]
-  (fn div [& contents]
-    (ContainerTag name (vec contents) empty-style {} empty-class "")))
+(defn tag [name]
+  (fn div
+    ([]
+     (Tag name [] empty-style {} empty-class))
+    ([attr-or-tag & contents]
+     (let [hash-map? (instance? HashMap attr-or-tag)]
+       (Tag name (vec (hash-map? contents
+                                 (cons attr-or-tag contents)))
+            empty-style
+            (hash-map? attr-or-tag {})
+            empty-class)))))
+
+(defn attr [element attr-key value]
+  (assoc-in element [.attributes attr-key] value))
 
 (extend-type Class
   Function
@@ -164,23 +198,30 @@
     (.class element (conj (.class element) class))))
 
 
+(deftype hundredth-em [size]
+  (assert (instance? Integer size))
+  
+  PageElement
+  (html [_]
+    (let [size-str (str size)]
+      [(str (subs size-str 0 (- (count size-str) 2))
+            "."
+            (subs size-str (- (count size-str) 2))
+            "em")])))
+
 (deftype px [size]
   (assert (instance? Integer size))
   
   PageElement
-  (html [_] [(str size) "px"]))
+  (html [_] [(str size "px")]))
 
 (deftype percent [size]
   (assert (instance? Integer size))
   
   PageElement
-  (html [_] [(str size) "%"]))
+  (html [_] [(str size "%")]))
 
-(def SizeValue (comp px percent))
-
-(def cover (reify
-             PageElement
-             (html [_] ["cover"])))
+(def SizeValue (comp hundredth-em px percent))
 
 (deftype NamedColor [color]
   PageElement
@@ -191,7 +232,7 @@
 
 (deftype HexColor [color]
   PageElement
-  (html [_] ["#" color]))
+  (html [_] [(str "#" color)]))
 
 (defn hex-color [s]
   ;; TODO: validate color string to only contain hex digits
@@ -200,42 +241,142 @@
 (def ColorValue (comp HexColor
                       NamedColor))
 
-(def row (reify
-           PageElement
-           (html [_] ["row"])))
-
-(def column (reify
-              PageElement
-              (html [_] ["column"])))
-
-(def flex (reify
-            PageElement
-            (html [_] ["flex"])))
-
-(def flex-end (reify
-              PageElement
-              (html [_] ["flex-end"])))
-
-(def center (reify
-              PageElement
-              (html [_] ["center"])))
-
-(def space-between (reify
-                     PageElement
-                     (html [_] ["space-between"])))
-
-(def fixed (reify
-             PageElement
-             (html [_] ["fixed"])))
-
-
-
 (defn add-style [element attr-name value]
   (.styling element (-> (.styling element)
                         (remove (fn [style]
                                   (and (instance? StyleAttribute style)
                                        (= attr-name (.name style)))))
                         (conj (StyleAttribute attr-name value)))))
+
+
+(def MarginValue (comp auto SizeValue))
+
+(defn margin
+  ([element value]
+   (assert (instance? MarginValue value))
+   (add-style element "margin" value))
+  ([element vert horiz]
+   (assert (instance? MarginValue vert))
+   (assert (instance? MarginValue horiz))
+   (add-style element "margin" [vert horiz]))
+  ([element top horiz bottom]
+   (assert (instance? MarginValue top))
+   (assert (instance? MarginValue horiz))
+   (assert (instance? MarginValue bottom))
+   (add-style element "margin" [top horiz bottom]))
+  ([element top right bottom left]
+   (assert (instance? MarginValue top))
+   (assert (instance? MarginValue right))
+   (assert (instance? MarginValue bottom))
+   (assert (instance? MarginValue left))
+   (add-style element "margin" [top right bottom left])))
+
+(defn margin-top
+  ([element value]
+   (assert (instance? MarginValue value))
+   (add-style element "margin-top" value)))
+
+(defn margin-bottom
+  ([element value]
+   (assert (instance? MarginValue value))
+   (add-style element "margin-bottom" value)))
+
+(defn margin-left
+  ([element value]
+   (assert (instance? MarginValue value))
+   (add-style element "margin-left" value)))
+
+(defn margin-right
+  ([element value]
+   (assert (instance? MarginValue value))
+   (add-style element "margin-right" value)))
+
+
+(defn padding
+  ([element value]
+   (assert (instance? SizeValue value))
+   (add-style element "padding" value))
+  ([element vert horiz]
+   (assert (instance? SizeValue vert))
+   (assert (instance? SizeValue horiz))
+   (add-style element "padding" [vert horiz]))
+  ([element top horiz bottom]
+   (assert (instance? SizeValue top))
+   (assert (instance? SizeValue horiz))
+   (assert (instance? SizeValue bottom))
+   (add-style element "padding" [top horiz bottom]))
+  ([element top right bottom left]
+   (assert (instance? SizeValue top))
+   (assert (instance? SizeValue right))
+   (assert (instance? SizeValue bottom))
+   (assert (instance? SizeValue left))
+   (add-style element "padding" [top right bottom left])))
+
+(defn padding-top
+  ([element value]
+   (assert (instance? SizeValue value))
+   (add-style element "padding-top" value)))
+
+(defn padding-bottom
+  ([element value]
+   (assert (instance? SizeValue value))
+   (add-style element "padding-bottom" value)))
+
+(defn padding-left
+  ([element value]
+   (assert (instance? SizeValue value))
+   (add-style element "padding-left" value)))
+
+(defn padding-right
+  ([element value]
+   (assert (instance? SizeValue value))
+   (add-style element "padding-right" value)))
+
+(defn line-height
+  ([element value]
+   (assert (instance? SizeValue value))
+   (add-style element "line-height" value)))
+
+(defn z-index
+  ([element value]
+   (assert (instance? Integer value))
+   (add-style element "z-index" value)))
+
+(def DecorationValue (comp none))
+
+(defn text-decoration
+  ([element value]
+   (assert (instance? DecorationValue value))
+   (add-style element "text-decoration" value)))
+
+(defn line-decoration
+  ([element value]
+   (assert (instance? DecorationValue value))
+   (add-style element "line-decoration" value)))
+
+(defn letter-spacing
+  ([element value]
+   (assert (instance? SizeValue value))
+   (add-style element "letter-spacing" value)))
+
+(defn font-family
+  ([element value]
+   (assert (instance? String value))
+   (add-style element "font-family" value)))
+
+(defn font-face
+  ([element value]
+   (assert (instance? String value))
+   (add-style element "font-face" value)))
+
+(defn font-size
+  ([element value]
+   (assert (instance? SizeValue value))
+   (add-style element "font-size" value)))
+
+(defn font-weight [element value]
+  (assert (instance? Integer value))
+  (add-style element "font-weight" value))
 
 
 (def PositionValue (comp fixed))
@@ -273,6 +414,10 @@
   (assert (instance? SizeValue value))
   (add-style element "width" value))
 
+(defn height [element value]
+  (assert (instance? SizeValue value))
+  (add-style element "height" value))
+
 (defn color [element value]
   (assert (instance? ColorValue value))
   (add-style element "color" value))
@@ -301,48 +446,96 @@
   (assert (instance? Justification value))
   (add-style element "justify-content" value))
 
-(defn page-head [& contents]
-  (PageHead contents empty-style {} empty-class ""))
+(defn align-items [element value]
+  (assert (instance? Justification value))
+  (add-style element "align-items" value))
 
-(defn page-body [& contents]
-  (PageBody contents empty-style {} empty-class ""))
+(defn max-height [element value]
+  (assert (instance? SizeValue value))
+  (add-style element "max-height" value))
 
-(defn anchor [contents url]
-  (Anchor contents url empty-style {} empty-class ""))
+(defn min-height [element value]
+  (assert (instance? SizeValue value))
+  (add-style element "min-height" value))
 
-(def div (container-tag "div"))
-(def article (container-tag "article"))
-(def aside (container-tag "aside"))
-(def details (container-tag "details"))
-(def footer (container-tag "footer"))
-(def header (container-tag "header"))
-(def hgroup (container-tag "hgroup"))
-(def menu (container-tag "menu"))
-(def nav (container-tag "nav"))
-(def section (container-tag "section"))
-(def ol (container-tag "ol"))
-(def ul (container-tag "ul"))
+(def BorderStyleValue (comp solid hidden dotted dashed double groove ridge inset outset))
+
+(defn border-style [element value]
+  (assert (instance? BorderStyleValue value))
+  (add-style element "border-style" value))
+
+(defn border-width [element value]
+  (assert (instance? SizeValue value))
+  (add-style element "border-width" value))
+
+(defn border-radius [element value]
+  (assert (instance? SizeValue value))
+  (add-style element "border-radius" value))
+
+
+(def ListStyleType (comp none
+                         disc
+                         circle
+                         square
+                         decimal
+                         lower-roman
+                         upper-roman
+                         lower-alpha
+                         lower-latin
+                         upper-alpha
+                         upper-latin))
+
+(defn list-style [element type]
+  (assert (instance? ListStyleType type))
+  (add-style element "list-style" type))
+
+
+(def head (tag "head"))
+(def body (tag "body"))
+(def a (tag "a"))
+(def div (tag "div"))
+(def article (tag "article"))
+(def aside (tag "aside"))
+(def details (tag "details"))
+(def footer (tag "footer"))
+(def header (tag "header"))
+(def hgroup (tag "hgroup"))
+(def menu (tag "menu"))
+(def nav (tag "nav"))
+(def section (tag "section"))
+(def ol (tag "ol"))
+(def ul (tag "ul"))
+(def li (tag "li"))
+(def link (tag "link"))
+(def title (tag "title"))
+(def meta (tag "meta"))
+(def img (tag "img"))
+(def h1 (tag "h1"))
+(def h2 (tag "h2"))
+(def h3 (tag "h3"))
+(def h4 (tag "h4"))
+(def h5 (tag "h5"))
+(def h6 (tag "h6"))
 
 (deftype HTMLPage [head body]
-  (assert (instance? PageHead head))
-  (assert (instance? PageBody body))
-
   PageElement
   (html [_]
-    ["<!DOCTYPE html>\n"
+    ["<!DOCTYPE html>"
      (html head)
      (html body)]))
-
-(deftype title [title-str]
-  (assert (instance? String title-str))
-  
-  PageElement
-  (html [_]
-    ["<title>" title-str "</title>\n"]))
 
 (deftype style-css [contents]
   PageElement
   (html [_]
-    ["<style type=\"text/css\">\n"
-     (css contents)
-     "\n</style>"]))
+    ["\n<style type=\"text/css\">\n"
+     (map (vec (vals (css contents {})))
+          (fn [class]
+            ["." (.name class) "{\n"
+             (-> class
+                 .styling
+                 .styles
+                 (map html)
+                 (interpose "\n")
+                 vec)
+             "}\n\n"]))
+     "</style>"]))
