@@ -62,8 +62,13 @@
 (def column (reify PageElement (html [_] ["column"])))
 (def cover (reify PageElement (html [_] ["cover"])))
 (def flex (reify PageElement (html [_] ["flex"])))
+(def flex-begin (reify PageElement (html [_] ["flex-begin"])))
 (def flex-end (reify PageElement (html [_] ["flex-end"])))
 (def center (reify PageElement (html [_] ["center"])))
+(def top (reify PageElement (html [_] ["top"])))
+(def left (reify PageElement (html [_] ["left"])))
+(def right (reify PageElement (html [_] ["right"])))
+(def bottom (reify PageElement (html [_] ["bottom"])))
 (def space-between (reify PageElement (html [_] ["space-between"])))
 (def fixed (reify PageElement (html [_] ["fixed"])))
 (def auto (reify PageElement (html [_] ["auto"])))
@@ -78,16 +83,22 @@
 (def lower-latin (reify PageElement (html [_] ["lower-latin"])))
 (def upper-alpha (reify PageElement (html [_] ["upper-alpha"])))
 (def upper-latin (reify PageElement (html [_] ["upper-latin"])))
-(def solid (reify PageElement (html [_] ["solid"]))) 
-(def hidden (reify PageElement (html [_] ["hidden"]))) 
-(def dotted (reify PageElement (html [_] ["dotted"]))) 
-(def dashed (reify PageElement (html [_] ["dashed"]))) 
-(def double (reify PageElement (html [_] ["double"]))) 
-(def groove (reify PageElement (html [_] ["groove"]))) 
-(def ridge (reify PageElement (html [_] ["ridge"]))) 
-(def inset (reify PageElement (html [_] ["inset"]))) 
-(def outset (reify PageElement (html [_] ["outset"]))) 
+(def solid (reify PageElement (html [_] ["solid"])))
+(def hidden (reify PageElement (html [_] ["hidden"])))
+(def dotted (reify PageElement (html [_] ["dotted"])))
+(def dashed (reify PageElement (html [_] ["dashed"])))
+(def double (reify PageElement (html [_] ["double"])))
+(def groove (reify PageElement (html [_] ["groove"])))
+(def ridge (reify PageElement (html [_] ["ridge"])))
+(def inset (reify PageElement (html [_] ["inset"])))
+(def outset (reify PageElement (html [_] ["outset"])))
+(def scroll (reify PageElement (html [_] ["scroll"])))
+(def outside (reify PageElement (html [_] ["outside"])))
+(def inside (reify PageElement (html [_] ["inside"])))
 
+(def nbsp (reify PageElement
+            (css [_ classes] classes)
+            (html [_] ["&nbsp;"])))
 
 (deftype StyleAttribute [name value]
   PageElement
@@ -95,7 +106,7 @@
 
 (deftype Styling [styles]
   (assert (instance? Vector styles))
-  
+
   Collection
   (conj [_ v]
     (assert (instance? StyleAttribute v))
@@ -120,7 +131,7 @@
 
 (deftype Class [name styling]
   (assert (instance? Styling styling))
-  
+
   Stringable
   (string-list [_] (list "<CSS-Class " name ">"))
 
@@ -130,12 +141,12 @@
 
 (deftype Classes [classes]
   (assert (instance? HashMap classes))
-  
+
   Collection
   (conj [_ v]
     (assert (instance? Class v))
     (Classes (assoc classes (.name v) v)))
-  
+
   PageElement
   (html [_]
     (either (and (empty? classes)
@@ -178,7 +189,7 @@
     (css contents (css class classes))))
 
 (defn tag [name]
-  (fn div
+  (fn tag-constructor
     ([]
      (Tag name [] empty-style {} empty-class))
     ([attr-or-tag & contents]
@@ -200,7 +211,7 @@
 
 (deftype hundredth-em [size]
   (assert (instance? Integer size))
-  
+
   PageElement
   (html [_]
     (let [size-str (str size)]
@@ -209,15 +220,21 @@
             (subs size-str (- (count size-str) 2))
             "em")])))
 
+(deftype pt [size]
+  (assert (instance? Integer size))
+
+  PageElement
+  (html [_] [(str size "pt")]))
+
 (deftype px [size]
   (assert (instance? Integer size))
-  
+
   PageElement
   (html [_] [(str size "px")]))
 
 (deftype percent [size]
   (assert (instance? Integer size))
-  
+
   PageElement
   (html [_] [(str size "%")]))
 
@@ -228,6 +245,7 @@
   (html [_] [color]))
 
 (def white (NamedColor "white"))
+(def gray (NamedColor "gray"))
 
 
 (deftype HexColor [color]
@@ -369,9 +387,11 @@
    (assert (instance? String value))
    (add-style element "font-face" value)))
 
+(def FontSizeValue (comp hundredth-em px percent pt))
+
 (defn font-size
   ([element value]
-   (assert (instance? SizeValue value))
+   (assert (instance? FontSizeValue value))
    (add-style element "font-size" value)))
 
 (defn font-weight [element value]
@@ -379,13 +399,13 @@
   (add-style element "font-weight" value))
 
 
-(def PositionValue (comp fixed))
+(def PositioningValue (comp fixed))
 
 (defn position [element value]
-  (assert (instance? PositionValue value))
+  (assert (instance? PositioningValue value))
   (add-style element "position" value))
 
-(def BackgroundAttachmentValue (comp fixed))
+(def BackgroundAttachmentValue (comp fixed scroll))
 
 (defn background-attachment [element value]
   (assert (instance? BackgroundAttachmentValue value))
@@ -409,6 +429,17 @@
 (defn background-color [element value]
   (assert (instance? ColorValue value))
   (add-style element "background-color" value))
+
+(def PositionValue (comp top bottom left right center))
+
+(defn background-position
+  ([element value]
+   (assert (instance? PositionValue value))
+   (add-style element "background-position" value))
+  ([element x-pos y-pos]
+   (assert (instance? PositionValue x-pos))
+   (assert (instance? PositionValue y-pos))
+   (add-style element "background-position" [x-pos y-pos])))
 
 (defn width [element value]
   (assert (instance? SizeValue value))
@@ -438,8 +469,15 @@
       (display flex)
       (add-style "flex-direction" column)))
 
+(defn flex-wrap [element]
+  (add-style element "flex-wrap" "wrap"))
+
+(defn flex-no-wrap [element]
+  (add-style element "flex-wrap" "no-wrap"))
+
 (def Justification (comp center
                          flex-end
+                         flex-begin
                          space-between))
 
 (defn justify-content [element value]
@@ -473,20 +511,27 @@
   (add-style element "border-radius" value))
 
 
-(def ListStyleType (comp none
-                         disc
-                         circle
-                         square
-                         decimal
-                         lower-roman
-                         upper-roman
-                         lower-alpha
-                         lower-latin
-                         upper-alpha
-                         upper-latin))
+(def ListStyleTypeValue (comp none
+                              disc
+                              circle
+                              square
+                              decimal
+                              lower-roman
+                              upper-roman
+                              lower-alpha
+                              lower-latin
+                              upper-alpha
+                              upper-latin))
 
 (defn list-style [element type]
-  (assert (instance? ListStyleType type))
+  (assert (instance? ListStyleTypeValue type))
+  (add-style element "list-style" type))
+
+(def ListStylePosValue (comp inside
+                             outside))
+
+(defn list-style-position [element type]
+  (assert (instance? ListStylePosValue type))
   (add-style element "list-style" type))
 
 
@@ -494,6 +539,8 @@
 (def body (tag "body"))
 (def a (tag "a"))
 (def div (tag "div"))
+(def p (tag "p"))
+(def span (tag "span"))
 (def article (tag "article"))
 (def aside (tag "aside"))
 (def details (tag "details"))
