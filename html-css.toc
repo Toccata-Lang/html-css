@@ -4,6 +4,7 @@
     (assert-result x (instance? Vector x)))
 
   (css [_ classes]
+    ;; TODO: find a way to change the 'HashMap' assertion to 'Classes'
     (assert (instance? HashMap classes))
     (assert-result x (instance? HashMap x))))
 
@@ -56,9 +57,7 @@
                         (css x classes)))))
 
 ;; values that are also types
-(def row (reify PageElement
-           (html [_]
-             ["row"])))
+(def row (reify PageElement (html [_] ["row"])))
 (def column (reify PageElement (html [_] ["column"])))
 (def cover (reify PageElement (html [_] ["cover"])))
 (def flex (reify PageElement (html [_] ["flex"])))
@@ -102,7 +101,8 @@
 
 (deftype StyleAttribute [name value]
   PageElement
-  (html [_] [name ": " (vec (interpose (html value) " ")) ";"]))
+  (html [_]
+    [name ": " (vec (interpose (html value) " ")) ";"]))
 
 (deftype Styling [styles]
   (assert (instance? Vector styles))
@@ -112,20 +112,20 @@
     (assert (instance? StyleAttribute v))
 
     (Styling (conj styles v)))
+
   (filter [_ f]
     (Styling (filter styles f)))
 
   PageElement
   (html [_]
-    (either (and (first styles)
-                 (maybe (comp ["style=\""]
-                              (-> styles
-                                  (reduce [] (fn [v styling]
-                                               (conj v (html styling))))
-                                  (interpose "\n")
-                                  vec
-                                  (conj "\"")))))
-            [])))
+    (either (empty? styles)
+            (comp ["style=\""]
+                  (-> styles
+                      (reduce [] (fn [v styling]
+                                   (conj v (html styling))))
+                      (interpose "\n")
+                      vec
+                      (conj "\""))))))
 
 (def empty-style (Styling []))
 
@@ -193,14 +193,17 @@
     ([]
      (Tag name [] empty-style {} empty-class))
     ([attr-or-tag & contents]
-     (let [hash-map? (instance? HashMap attr-or-tag)]
-       (Tag name (vec (hash-map? contents
-                                 (cons attr-or-tag contents)))
+     (let [contents (either (and (instance? HashMap attr-or-tag)
+                                 (maybe contents))
+                            (cons attr-or-tag contents))]
+       (Tag name (vec contents)
             empty-style
-            (hash-map? attr-or-tag {})
+            (either (instance? HashMap attr-or-tag) {})
             empty-class)))))
 
 (defn attr [element attr-key value]
+  (assert (instance? Tag element))
+
   (assoc-in element [.attributes attr-key] value))
 
 (extend-type Class
@@ -244,6 +247,7 @@
   PageElement
   (html [_] [color]))
 
+;; TODO: add rest of named colors
 (def white (NamedColor "white"))
 (def gray (NamedColor "gray"))
 
@@ -267,7 +271,9 @@
                         (conj (StyleAttribute attr-name value)))))
 
 
-(def MarginValue (comp auto SizeValue))
+(def Auto (enum auto))
+
+(def MarginValue (comp Auto SizeValue))
 
 (defn margin
   ([element value]
@@ -360,7 +366,7 @@
    (assert (instance? Integer value))
    (add-style element "z-index" value)))
 
-(def DecorationValue (comp none))
+(def DecorationValue (enum none))
 
 (defn text-decoration
   ([element value]
@@ -399,13 +405,13 @@
   (add-style element "font-weight" value))
 
 
-(def PositioningValue (comp fixed))
+(def PositioningValue (enum fixed))
 
 (defn position [element value]
   (assert (instance? PositioningValue value))
   (add-style element "position" value))
 
-(def BackgroundAttachmentValue (comp fixed scroll))
+(def BackgroundAttachmentValue (enum fixed scroll))
 
 (defn background-attachment [element value]
   (assert (instance? BackgroundAttachmentValue value))
@@ -414,7 +420,9 @@
 (defn background-fixed [element]
   (background-attachment element fixed))
 
-(def BackgroundSizeValue (comp cover SizeValue))
+(def Cover (enum cover))
+
+(def BackgroundSizeValue (comp Cover SizeValue))
 
 (defn background-size [element value]
   (assert (instance? BackgroundSizeValue value))
@@ -430,7 +438,7 @@
   (assert (instance? ColorValue value))
   (add-style element "background-color" value))
 
-(def PositionValue (comp top bottom left right center))
+(def PositionValue (enum top bottom left right center))
 
 (defn background-position
   ([element value]
@@ -453,7 +461,7 @@
   (assert (instance? ColorValue value))
   (add-style element "color" value))
 
-(def DisplayValue (comp flex))
+(def DisplayValue (enum flex))
 
 (defn display [element value]
   (assert (instance? DisplayValue value))
@@ -475,7 +483,7 @@
 (defn flex-no-wrap [element]
   (add-style element "flex-wrap" "no-wrap"))
 
-(def Justification (comp center
+(def Justification (enum center
                          flex-end
                          flex-begin
                          space-between))
@@ -496,7 +504,7 @@
   (assert (instance? SizeValue value))
   (add-style element "min-height" value))
 
-(def BorderStyleValue (comp solid hidden dotted dashed double groove ridge inset outset))
+(def BorderStyleValue (enum solid hidden dotted dashed double groove ridge inset outset))
 
 (defn border-style [element value]
   (assert (instance? BorderStyleValue value))
@@ -511,7 +519,7 @@
   (add-style element "border-radius" value))
 
 
-(def ListStyleTypeValue (comp none
+(def ListStyleTypeValue (enum none
                               disc
                               circle
                               square
@@ -527,7 +535,7 @@
   (assert (instance? ListStyleTypeValue type))
   (add-style element "list-style" type))
 
-(def ListStylePosValue (comp inside
+(def ListStylePosValue (enum inside
                              outside))
 
 (defn list-style-position [element type]
