@@ -12,6 +12,7 @@
   PageElement
   (css [_ classes]
     classes)
+
   (html [n]
     [(str n)]))
 
@@ -19,6 +20,7 @@
   PageElement
   (css [_ classes]
     classes)
+
   (html [s]
     [(str s)]))
 
@@ -26,6 +28,7 @@
   PageElement
   (css [_ classes]
     classes)
+
   (html [s]
     [s]))
 
@@ -64,12 +67,10 @@
 (def flex-begin (reify PageElement (html [_] ["flex-begin"])))
 (def flex-end (reify PageElement (html [_] ["flex-end"])))
 (def center (reify PageElement (html [_] ["center"])))
-(def top (reify PageElement (html [_] ["top"])))
-(def left (reify PageElement (html [_] ["left"])))
-(def right (reify PageElement (html [_] ["right"])))
-(def bottom (reify PageElement (html [_] ["bottom"])))
 (def space-between (reify PageElement (html [_] ["space-between"])))
+(def block (reify PageElement (html [_] ["block"])))
 (def fixed (reify PageElement (html [_] ["fixed"])))
+(def relative (reify PageElement (html [_] ["relative"])))
 (def auto (reify PageElement (html [_] ["auto"])))
 (def none (reify PageElement (html [_] ["none"])))
 (def disc (reify PageElement (html [_] ["disc"])))
@@ -94,6 +95,11 @@
 (def scroll (reify PageElement (html [_] ["scroll"])))
 (def outside (reify PageElement (html [_] ["outside"])))
 (def inside (reify PageElement (html [_] ["inside"])))
+(def initial (reify PageElement (html [_] ["initial"])))
+(def inherit (reify PageElement (html [_] ["inherit"])))
+(def unset (reify PageElement (html [_] ["unset"])))
+(def content-box (reify PageElement (html [_] ["content-box"])))
+(def border-box (reify PageElement (html [_] ["border-box"])))
 
 (def nbsp (reify PageElement
             (css [_ classes] classes)
@@ -159,6 +165,7 @@
                         "\""))))
 
   (css [_ classes-map]
+    ;; TODO: make this a call to comp, maybe
     (reduce (vals classes) classes-map (fn [m class]
                                          (css class m)))))
 
@@ -241,7 +248,10 @@
   PageElement
   (html [_] [(str size "%")]))
 
-(def SizeValue (comp hundredth-em px percent))
+(def SizeValue (comp hundredth-em
+                     px
+                     percent
+                     String))
 
 (deftype NamedColor [color]
   PageElement
@@ -249,6 +259,7 @@
 
 ;; TODO: add rest of named colors
 (def white (NamedColor "white"))
+(def black (NamedColor "black"))
 (def gray (NamedColor "gray"))
 
 
@@ -260,16 +271,56 @@
   ;; TODO: validate color string to only contain hex digits
   (HexColor s))
 
+(def GlobalColor (enum initial inherit unset))
+
 (def ColorValue (comp HexColor
-                      NamedColor))
+                      NamedColor
+                      GlobalColor))
 
-(defn add-style [element attr-name value]
-  (.styling element (-> (.styling element)
-                        (remove (fn [style]
-                                  (and (instance? StyleAttribute style)
-                                       (= attr-name (.name style)))))
-                        (conj (StyleAttribute attr-name value)))))
+(defprotocol Stylings
+  (add-style [element attr-name value]
+    (.styling element (-> (.styling element)
+                          (remove (fn [style]
+                                    (and (instance? StyleAttribute style)
+                                         (= attr-name (.name style)))))
+                          (conj (StyleAttribute attr-name value))))))
 
+;; Some types are also style attributes
+(def top (reify
+           Function
+           (invoke [_ element value]
+             (assert (instance? SizeValue value))
+             (add-style element "top" value))
+
+           PageElement
+           (html [_] ["top"])))
+
+(def left (reify
+            Function
+            (invoke [_ element value]
+              (assert (instance? SizeValue value))
+              (add-style element "left" value))
+
+            PageElement
+            (html [_] ["left"])))
+
+(def right (reify
+             Function
+             (invoke [_ element value]
+               (assert (instance? SizeValue value))
+               (add-style element "left" value))
+
+             PageElement
+             (html [_] ["right"])))
+
+(def bottom (reify
+              Function
+              (invoke [_ element value]
+                (assert (instance? SizeValue value))
+                (add-style element "left" value))
+
+              PageElement
+              (html [_] ["bottom"])))
 
 (def Auto (enum auto))
 
@@ -405,7 +456,7 @@
   (add-style element "font-weight" value))
 
 
-(def PositioningValue (enum fixed))
+(def PositioningValue (enum fixed relative))
 
 (defn position [element value]
   (assert (instance? PositioningValue value))
@@ -438,6 +489,15 @@
   (assert (instance? ColorValue value))
   (add-style element "background-color" value))
 
+(def BoxSizingValue (enum initial
+                          inherit
+                          content-box
+                          border-box))
+
+(defn box-sizing [element value]
+  (assert (instance? BoxSizingValue value))
+  (add-style element "box-sizing" value))
+
 (def PositionValue (enum top bottom left right center))
 
 (defn background-position
@@ -461,7 +521,7 @@
   (assert (instance? ColorValue value))
   (add-style element "color" value))
 
-(def DisplayValue (enum flex))
+(def DisplayValue (enum flex block))
 
 (defn display [element value]
   (assert (instance? DisplayValue value))
@@ -510,9 +570,25 @@
   (assert (instance? BorderStyleValue value))
   (add-style element "border-style" value))
 
-(defn border-width [element value]
-  (assert (instance? SizeValue value))
-  (add-style element "border-width" value))
+(defn border-width
+  ([element value]
+   (assert (instance? SizeValue value))
+   (add-style element "border-width" value))
+  ([element vert horiz]
+   (assert (instance? SizeValue vert))
+   (assert (instance? SizeValue horiz))
+   (add-style element "border-width" [vert horiz]))
+  ([element top horiz bottom]
+   (assert (instance? SizeValue top))
+   (assert (instance? SizeValue horiz))
+   (assert (instance? SizeValue bottom))
+   (add-style element "border-width" [top horiz bottom]))
+  ([element top right bottom left]
+   (assert (instance? SizeValue top))
+   (assert (instance? SizeValue right))
+   (assert (instance? SizeValue bottom))
+   (assert (instance? SizeValue left))
+   (add-style element "border-width" [top right bottom left])))
 
 (defn border-radius [element value]
   (assert (instance? SizeValue value))
@@ -545,6 +621,7 @@
 
 (def head (tag "head"))
 (def body (tag "body"))
+(def script (tag "script"))
 (def a (tag "a"))
 (def div (tag "div"))
 (def p (tag "p"))
@@ -571,6 +648,11 @@
 (def h4 (tag "h4"))
 (def h5 (tag "h5"))
 (def h6 (tag "h6"))
+
+(extend-type String
+  Stylings
+  (add-style [s attr-name value]
+    (add-style (span s) attr-name value)))
 
 (deftype HTMLPage [head body]
   PageElement
