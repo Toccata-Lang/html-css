@@ -72,6 +72,7 @@
 (def fixed (reify PageElement (html [_] ["fixed"])))
 (def relative (reify PageElement (html [_] ["relative"])))
 (def auto (reify PageElement (html [_] ["auto"])))
+(def normal (reify PageElement (html [_] ["normal"])))
 (def none (reify PageElement (html [_] ["none"])))
 (def disc (reify PageElement (html [_] ["disc"])))
 (def circle (reify PageElement (html [_] ["circle"])))
@@ -100,6 +101,7 @@
 (def unset (reify PageElement (html [_] ["unset"])))
 (def content-box (reify PageElement (html [_] ["content-box"])))
 (def border-box (reify PageElement (html [_] ["border-box"])))
+(def list-item (reify PageElement (html [_] ["list-item"])))
 
 (def nbsp (reify PageElement
             (css [_ classes] classes)
@@ -142,6 +144,15 @@
   (string-list [_] (list "<CSS-Class " name ">"))
 
   PageElement
+  (html [_]
+    [name "{\n"
+     (-> styling
+         .styles
+         (map html)
+         (interpose "\n")
+         vec)
+     "}\n\n"])
+
   (css [class classes]
     (assoc classes name class)))
 
@@ -213,11 +224,6 @@
 
   (assoc-in element [.attributes attr-key] value))
 
-(extend-type Class
-  Function
-  (invoke [class element]
-    (.class element (conj (.class element) class))))
-
 
 (deftype hundredth-em [size]
   (assert (instance? Integer size))
@@ -248,20 +254,166 @@
   PageElement
   (html [_] [(str size "%")]))
 
-(def SizeValue (comp hundredth-em
-                     px
-                     percent
-                     String))
+(def Length (comp px
+                  pt
+                  percent
+                  ;; TODO: remove when floats work
+                  String ;; So we can specify "em" lengths which are usually floats
+                  ))
 
 (deftype NamedColor [color]
   PageElement
   (html [_] [color]))
 
-;; TODO: add rest of named colors
-(def white (NamedColor "white"))
+;; The named colors of CSS
 (def black (NamedColor "black"))
+(def silver (NamedColor "silver"))
 (def gray (NamedColor "gray"))
-
+(def white (NamedColor "white"))
+(def maroon (NamedColor "maroon"))
+(def red (NamedColor "red"))
+(def purple (NamedColor "purple"))
+(def fuchsia (NamedColor "fuchsia"))
+(def green (NamedColor "green"))
+(def lime (NamedColor "lime"))
+(def olive (NamedColor "olive"))
+(def yellow (NamedColor "yellow"))
+(def navy (NamedColor "navy"))
+(def blue (NamedColor "blue"))
+(def teal (NamedColor "teal"))
+(def aqua (NamedColor "aqua"))
+(def orange (NamedColor "orange"))
+(def aliceblue (NamedColor "aliceblue"))
+(def antiquewhite (NamedColor "antiquewhite"))
+(def aquamarine (NamedColor "aquamarine"))
+(def azure (NamedColor "azure"))
+(def beige (NamedColor "beige"))
+(def bisque (NamedColor "bisque"))
+(def blanchedalmond (NamedColor "blanchedalmond"))
+(def blueviolet (NamedColor "blueviolet"))
+(def brown (NamedColor "brown"))
+(def burlywood (NamedColor "burlywood"))
+(def cadetblue (NamedColor "cadetblue"))
+(def chartreuse (NamedColor "chartreuse"))
+(def chocolate (NamedColor "chocolate"))
+(def coral (NamedColor "coral"))
+(def cornflowerblue (NamedColor "cornflowerblue"))
+(def cornsilk (NamedColor "cornsilk"))
+(def crimson (NamedColor "crimson"))
+(def cyan (NamedColor "cyan"))
+(def darkblue (NamedColor "darkblue"))
+(def darkcyan (NamedColor "darkcyan"))
+(def darkgoldenrod (NamedColor "darkgoldenrod"))
+(def darkgray (NamedColor "darkgray"))
+(def darkgreen (NamedColor "darkgreen"))
+(def darkgrey (NamedColor "darkgrey"))
+(def darkkhaki (NamedColor "darkkhaki"))
+(def darkmagenta (NamedColor "darkmagenta"))
+(def darkolivegreen (NamedColor "darkolivegreen"))
+(def darkorange (NamedColor "darkorange"))
+(def darkorchid (NamedColor "darkorchid"))
+(def darkred (NamedColor "darkred"))
+(def darksalmon (NamedColor "darksalmon"))
+(def darkseagreen (NamedColor "darkseagreen"))
+(def darkslateblue (NamedColor "darkslateblue"))
+(def darkslategray (NamedColor "darkslategray"))
+(def darkslategrey (NamedColor "darkslategrey"))
+(def darkturquoise (NamedColor "darkturquoise"))
+(def darkviolet (NamedColor "darkviolet"))
+(def deeppink (NamedColor "deeppink"))
+(def deepskyblue (NamedColor "deepskyblue"))
+(def dimgray (NamedColor "dimgray"))
+(def dimgrey (NamedColor "dimgrey"))
+(def dodgerblue (NamedColor "dodgerblue"))
+(def firebrick (NamedColor "firebrick"))
+(def floralwhite (NamedColor "floralwhite"))
+(def forestgreen (NamedColor "forestgreen"))
+(def gainsboro (NamedColor "gainsboro"))
+(def ghostwhite (NamedColor "ghostwhite"))
+(def gold (NamedColor "gold"))
+(def goldenrod (NamedColor "goldenrod"))
+(def greenyellow (NamedColor "greenyellow"))
+(def grey (NamedColor "grey"))
+(def honeydew (NamedColor "honeydew"))
+(def hotpink (NamedColor "hotpink"))
+(def indianred (NamedColor "indianred"))
+(def indigo (NamedColor "indigo"))
+(def ivory (NamedColor "ivory"))
+(def khaki (NamedColor "khaki"))
+(def lavender (NamedColor "lavender"))
+(def lavenderblush (NamedColor "lavenderblush"))
+(def lawngreen (NamedColor "lawngreen"))
+(def lemonchiffon (NamedColor "lemonchiffon"))
+(def lightblue (NamedColor "lightblue"))
+(def lightcoral (NamedColor "lightcoral"))
+(def lightcyan (NamedColor "lightcyan"))
+(def lightgoldenrodyellow (NamedColor "lightgoldenrodyellow"))
+(def lightgray (NamedColor "lightgray"))
+(def lightgreen (NamedColor "lightgreen"))
+(def lightgrey (NamedColor "lightgrey"))
+(def lightpink (NamedColor "lightpink"))
+(def lightsalmon (NamedColor "lightsalmon"))
+(def lightseagreen (NamedColor "lightseagreen"))
+(def lightskyblue (NamedColor "lightskyblue"))
+(def lightslategray (NamedColor "lightslategray"))
+(def lightslategrey (NamedColor "lightslategrey"))
+(def lightsteelblue (NamedColor "lightsteelblue"))
+(def lightyellow (NamedColor "lightyellow"))
+(def limegreen (NamedColor "limegreen"))
+(def linen (NamedColor "linen"))
+(def magenta (NamedColor "magenta"))
+(def mediumaquamarine (NamedColor "mediumaquamarine"))
+(def mediumblue (NamedColor "mediumblue"))
+(def mediumorchid (NamedColor "mediumorchid"))
+(def mediumpurple (NamedColor "mediumpurple"))
+(def mediumseagreen (NamedColor "mediumseagreen"))
+(def mediumslateblue (NamedColor "mediumslateblue"))
+(def mediumspringgreen (NamedColor "mediumspringgreen"))
+(def mediumturquoise (NamedColor "mediumturquoise"))
+(def mediumvioletred (NamedColor "mediumvioletred"))
+(def midnightblue (NamedColor "midnightblue"))
+(def mintcream (NamedColor "mintcream"))
+(def mistyrose (NamedColor "mistyrose"))
+(def moccasin (NamedColor "moccasin"))
+(def navajowhite (NamedColor "navajowhite"))
+(def oldlace (NamedColor "oldlace"))
+(def olivedrab (NamedColor "olivedrab"))
+(def orangered (NamedColor "orangered"))
+(def orchid (NamedColor "orchid"))
+(def palegoldenrod (NamedColor "palegoldenrod"))
+(def palegreen (NamedColor "palegreen"))
+(def paleturquoise (NamedColor "paleturquoise"))
+(def palevioletred (NamedColor "palevioletred"))
+(def papayawhip (NamedColor "papayawhip"))
+(def peachpuff (NamedColor "peachpuff"))
+(def peru (NamedColor "peru"))
+(def pink (NamedColor "pink"))
+(def plum (NamedColor "plum"))
+(def powderblue (NamedColor "powderblue"))
+(def rosybrown (NamedColor "rosybrown"))
+(def royalblue (NamedColor "royalblue"))
+(def saddlebrown (NamedColor "saddlebrown"))
+(def salmon (NamedColor "salmon"))
+(def sandybrown (NamedColor "sandybrown"))
+(def seagreen (NamedColor "seagreen"))
+(def seashell (NamedColor "seashell"))
+(def sienna (NamedColor "sienna"))
+(def skyblue (NamedColor "skyblue"))
+(def slateblue (NamedColor "slateblue"))
+(def slategray (NamedColor "slategray"))
+(def slategrey (NamedColor "slategrey"))
+(def snow (NamedColor "snow"))
+(def springgreen (NamedColor "springgreen"))
+(def steelblue (NamedColor "steelblue"))
+(def tan (NamedColor "tan"))
+(def thistle (NamedColor "thistle"))
+(def tomato (NamedColor "tomato"))
+(def turquoise (NamedColor "turquoise"))
+(def violet (NamedColor "violet"))
+(def wheat (NamedColor "wheat"))
+(def whitesmoke (NamedColor "whitesmoke"))
+(def yellowgreen (NamedColor "yellowgreen"))
+(def rebeccapurple (NamedColor "rebeccapurple"))
 
 (deftype HexColor [color]
   PageElement
@@ -271,13 +423,15 @@
   ;; TODO: validate color string to only contain hex digits
   (HexColor s))
 
-(def GlobalColor (enum initial inherit unset))
+(def Global (enum initial inherit unset))
 
 (def ColorValue (comp HexColor
                       NamedColor
-                      GlobalColor))
+                      Global))
 
 (defprotocol Stylings
+  (add-class [element class]
+    (.class element (conj (.class element) class)))
   (add-style [element attr-name value]
     (.styling element (-> (.styling element)
                           (remove (fn [style]
@@ -285,11 +439,16 @@
                                          (= attr-name (.name style)))))
                           (conj (StyleAttribute attr-name value))))))
 
+(extend-type Class
+  Function
+  (invoke [class element]
+    (add-class element class)))
+
 ;; Some types are also style attributes
 (def top (reify
            Function
            (invoke [_ element value]
-             (assert (instance? SizeValue value))
+             (assert (instance? Length value))
              (add-style element "top" value))
 
            PageElement
@@ -298,7 +457,7 @@
 (def left (reify
             Function
             (invoke [_ element value]
-              (assert (instance? SizeValue value))
+              (assert (instance? Length value))
               (add-style element "left" value))
 
             PageElement
@@ -307,7 +466,7 @@
 (def right (reify
              Function
              (invoke [_ element value]
-               (assert (instance? SizeValue value))
+               (assert (instance? Length value))
                (add-style element "left" value))
 
              PageElement
@@ -316,7 +475,7 @@
 (def bottom (reify
               Function
               (invoke [_ element value]
-                (assert (instance? SizeValue value))
+                (assert (instance? Length value))
                 (add-style element "left" value))
 
               PageElement
@@ -324,7 +483,10 @@
 
 (def Auto (enum auto))
 
-(def MarginValue (comp Auto SizeValue))
+(def MarginValue (comp Auto
+                       Length
+                       Global
+                       String))
 
 (defn margin
   ([element value]
@@ -369,53 +531,51 @@
 
 (defn padding
   ([element value]
-   (assert (instance? SizeValue value))
+   (assert (instance? Length value))
    (add-style element "padding" value))
   ([element vert horiz]
-   (assert (instance? SizeValue vert))
-   (assert (instance? SizeValue horiz))
+   (assert (instance? Length vert))
+   (assert (instance? Length horiz))
    (add-style element "padding" [vert horiz]))
   ([element top horiz bottom]
-   (assert (instance? SizeValue top))
-   (assert (instance? SizeValue horiz))
-   (assert (instance? SizeValue bottom))
+   (assert (instance? Length top))
+   (assert (instance? Length horiz))
+   (assert (instance? Length bottom))
    (add-style element "padding" [top horiz bottom]))
   ([element top right bottom left]
-   (assert (instance? SizeValue top))
-   (assert (instance? SizeValue right))
-   (assert (instance? SizeValue bottom))
-   (assert (instance? SizeValue left))
+   (assert (instance? Length top))
+   (assert (instance? Length right))
+   (assert (instance? Length bottom))
+   (assert (instance? Length left))
    (add-style element "padding" [top right bottom left])))
 
-(defn padding-top
-  ([element value]
-   (assert (instance? SizeValue value))
-   (add-style element "padding-top" value)))
+(defn padding-top [element value]
+  (assert (instance? Length value))
+  (add-style element "padding-top" value))
 
-(defn padding-bottom
-  ([element value]
-   (assert (instance? SizeValue value))
-   (add-style element "padding-bottom" value)))
+(defn padding-bottom [element value]
+  (assert (instance? Length value))
+  (add-style element "padding-bottom" value))
 
-(defn padding-left
-  ([element value]
-   (assert (instance? SizeValue value))
-   (add-style element "padding-left" value)))
+(defn padding-left [element value]
+  (assert (instance? Length value))
+  (add-style element "padding-left" value))
 
-(defn padding-right
-  ([element value]
-   (assert (instance? SizeValue value))
-   (add-style element "padding-right" value)))
+(defn padding-right [element value]
+  (assert (instance? Length value))
+  (add-style element "padding-right" value))
 
-(defn line-height
-  ([element value]
-   (assert (instance? SizeValue value))
-   (add-style element "line-height" value)))
+(defn line-height [element value]
+  (assert (instance? Length value))
+  (add-style element "line-height" value))
 
-(defn z-index
-  ([element value]
-   (assert (instance? Integer value))
-   (add-style element "z-index" value)))
+(defn z-index [element value]
+  (assert (instance? Integer value))
+  (add-style element "z-index" value))
+
+(defn box-shadow [element value]
+  (assert (instance? String value))
+  (add-style element "box-shadow" value))
 
 (def DecorationValue (enum none))
 
@@ -431,7 +591,7 @@
 
 (defn letter-spacing
   ([element value]
-   (assert (instance? SizeValue value))
+   (assert (instance? Length value))
    (add-style element "letter-spacing" value)))
 
 (defn font-family
@@ -444,11 +604,15 @@
    (assert (instance? String value))
    (add-style element "font-face" value)))
 
-(def FontSizeValue (comp hundredth-em px percent pt))
+(def FontLength (comp hundredth-em
+                         px
+                         percent
+                         pt
+                         String))
 
 (defn font-size
   ([element value]
-   (assert (instance? FontSizeValue value))
+   (assert (instance? FontLength value))
    (add-style element "font-size" value)))
 
 (defn font-weight [element value]
@@ -473,10 +637,10 @@
 
 (def Cover (enum cover))
 
-(def BackgroundSizeValue (comp Cover SizeValue))
+(def BackgroundLength (comp Cover Length))
 
 (defn background-size [element value]
-  (assert (instance? BackgroundSizeValue value))
+  (assert (instance? BackgroundLength value))
   (add-style element "background-size" value))
 
 (defn background-cover [element]
@@ -510,18 +674,18 @@
    (add-style element "background-position" [x-pos y-pos])))
 
 (defn width [element value]
-  (assert (instance? SizeValue value))
+  (assert (instance? Length value))
   (add-style element "width" value))
 
 (defn height [element value]
-  (assert (instance? SizeValue value))
+  (assert (instance? Length value))
   (add-style element "height" value))
 
 (defn color [element value]
   (assert (instance? ColorValue value))
   (add-style element "color" value))
 
-(def DisplayValue (enum flex block))
+(def DisplayValue (enum flex block list-item))
 
 (defn display [element value]
   (assert (instance? DisplayValue value))
@@ -557,11 +721,11 @@
   (add-style element "align-items" value))
 
 (defn max-height [element value]
-  (assert (instance? SizeValue value))
+  (assert (instance? Length value))
   (add-style element "max-height" value))
 
 (defn min-height [element value]
-  (assert (instance? SizeValue value))
+  (assert (instance? Length value))
   (add-style element "min-height" value))
 
 (def BorderStyleValue (enum solid hidden dotted dashed double groove ridge inset outset))
@@ -572,26 +736,26 @@
 
 (defn border-width
   ([element value]
-   (assert (instance? SizeValue value))
+   (assert (instance? Length value))
    (add-style element "border-width" value))
   ([element vert horiz]
-   (assert (instance? SizeValue vert))
-   (assert (instance? SizeValue horiz))
+   (assert (instance? Length vert))
+   (assert (instance? Length horiz))
    (add-style element "border-width" [vert horiz]))
   ([element top horiz bottom]
-   (assert (instance? SizeValue top))
-   (assert (instance? SizeValue horiz))
-   (assert (instance? SizeValue bottom))
+   (assert (instance? Length top))
+   (assert (instance? Length horiz))
+   (assert (instance? Length bottom))
    (add-style element "border-width" [top horiz bottom]))
   ([element top right bottom left]
-   (assert (instance? SizeValue top))
-   (assert (instance? SizeValue right))
-   (assert (instance? SizeValue bottom))
-   (assert (instance? SizeValue left))
+   (assert (instance? Length top))
+   (assert (instance? Length right))
+   (assert (instance? Length bottom))
+   (assert (instance? Length left))
    (add-style element "border-width" [top right bottom left])))
 
 (defn border-radius [element value]
-  (assert (instance? SizeValue value))
+  (assert (instance? Length value))
   (add-style element "border-radius" value))
 
 
@@ -651,28 +815,38 @@
 
 (extend-type String
   Stylings
+  (add-class [s class]
+    (add-class (span s) class))
+
   (add-style [s attr-name value]
     (add-style (span s) attr-name value)))
 
 (deftype HTMLPage [head body]
   PageElement
   (html [_]
-    ["<!DOCTYPE html>"
+    ["<!DOCTYPE html>\n"
+     "<html>\n"
      (html head)
-     (html body)]))
+     (html body)
+     "</html>"]))
 
-(deftype style-css [contents]
-  PageElement
-  (html [_]
-    ["\n<style type=\"text/css\">\n"
-     (map (vec (vals (css contents {})))
-          (fn [class]
-            ["." (.name class) "{\n"
-             (-> class
-                 .styling
-                 .styles
-                 (map html)
-                 (interpose "\n")
-                 vec)
-             "}\n\n"]))
-     "</style>"]))
+(defn node-types-css [& type-classes]
+  (reify
+    PageElement
+    (html [_]
+      ["\n<style type=\"text/css\">\n"
+       (map type-classes html)
+       "</style>"])))
+
+(defn classes-css [contents]
+  (reify
+    PageElement
+    (html [_]
+      ["\n<style type=\"text/css\">\n"
+       (-> contents
+           (css {})
+           vals
+           vec
+           (map (fn [class]
+                  ["." (html class)])))
+       "</style>"])))
