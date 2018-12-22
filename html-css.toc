@@ -110,7 +110,7 @@
 (deftype StyleAttribute [name value]
   PageElement
   (html [_]
-    [name ": " (vec (interpose (html value) " ")) ";"]))
+    [name ": " (vec (interpose (html value) " "))]))
 
 (deftype Styling [styles]
   (assert (instance? Vector styles))
@@ -131,7 +131,7 @@
                   (-> styles
                       (reduce [] (fn [v styling]
                                    (conj v (html styling))))
-                      (interpose "\n")
+                      (interpose ";\n")
                       vec
                       (conj "\""))))))
 
@@ -145,13 +145,14 @@
 
   PageElement
   (html [_]
-    [name "{\n"
-     (-> styling
-         .styles
-         (map html)
-         (interpose "\n")
-         vec)
-     "}\n\n"])
+    (either (empty? (.styles styling))
+            [name "{\n"
+             (-> styling
+                 .styles
+                 (map html)
+                 (interpose ";\n")
+                 vec)
+             "}\n\n"]))
 
   (css [class classes]
     (assoc classes name class)))
@@ -171,7 +172,7 @@
             (comp ["class=\""]
                   (conj (-> classes
                             keys
-                            (interpose ", ")
+                            (interpose " ")
                             vec)
                         "\""))))
 
@@ -224,17 +225,6 @@
 
   (assoc-in element [.attributes attr-key] value))
 
-
-(deftype hundredth-em [size]
-  (assert (instance? Integer size))
-
-  PageElement
-  (html [_]
-    (let [size-str (str size)]
-      [(str (subs size-str 0 (- (count size-str) 2))
-            "."
-            (subs size-str (- (count size-str) 2))
-            "em")])))
 
 (deftype pt [size]
   (assert (instance? Integer size))
@@ -604,15 +594,9 @@
    (assert (instance? String value))
    (add-style element "font-face" value)))
 
-(def FontLength (comp hundredth-em
-                         px
-                         percent
-                         pt
-                         String))
-
 (defn font-size
   ([element value]
-   (assert (instance? FontLength value))
+   (assert (instance? Length value))
    (add-style element "font-size" value)))
 
 (defn font-weight [element value]
@@ -685,7 +669,7 @@
   (assert (instance? ColorValue value))
   (add-style element "color" value))
 
-(def DisplayValue (enum flex block list-item))
+(def DisplayValue (enum flex block list-item none))
 
 (defn display [element value]
   (assert (instance? DisplayValue value))
@@ -716,9 +700,21 @@
   (assert (instance? Justification value))
   (add-style element "justify-content" value))
 
+(defn text-align [element value]
+  (assert (instance? Justification value))
+  (add-style element "text-align" value))
+
 (defn align-items [element value]
   (assert (instance? Justification value))
   (add-style element "align-items" value))
+
+(defn max-width [element value]
+  (assert (instance? Length value))
+  (add-style element "max-width" value))
+
+(defn min-width [element value]
+  (assert (instance? Length value))
+  (add-style element "min-width" value))
 
 (defn max-height [element value]
   (assert (instance? Length value))
@@ -837,6 +833,44 @@
       ["\n<style type=\"text/css\">\n"
        (map type-classes html)
        "</style>"])))
+
+(deftype Any [styling])
+
+(defn any []
+  (Any []))
+
+(deftype All [styling])
+
+(def all
+  (All []))
+
+(deftype Not [styling])
+
+(defn not []
+  (Not []))
+
+(deftype MediaQuery [styling classes]
+  (assert (instance? Styling styling))
+
+  PageElement
+  (html [_]
+    ["\n@media ("
+     (-> styling
+         .styles
+         (reduce [] (fn [v styling]
+                      (conj v (html styling))))
+         (interpose "\n")
+         vec)
+     ") {"
+     (-> classes
+         (map (fn [class]
+                  ["." (html class)]))
+         (interpose "\n")
+         vec)
+     "}"]))
+
+(defn media [& classes]
+  (MediaQuery empty-style classes))
 
 (defn classes-css [contents]
   (reify
