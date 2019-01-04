@@ -191,6 +191,10 @@
   (assert (instance? Classes class))
   (assert (instance? Styling styling))
 
+  Stringable
+  (string-list [_]
+    (list "<Tag " (str name) ">"))
+
   PageElement
   (html [_]
     ["\n<" name " "
@@ -637,6 +641,14 @@
   (assert (instance? ColorValue value))
   (add-style element "background-color" value))
 
+
+(def OverflowValue (enum scroll))
+
+(defn overflow [element value]
+  (assert (instance? Overflowvalue value))
+  (add-style element "overflow" value))
+
+
 (def BoxSizingValue (enum initial
                           inherit
                           content-box
@@ -725,6 +737,10 @@
   (add-style element "min-height" value))
 
 (def BorderStyleValue (enum solid hidden dotted dashed double groove ridge inset outset))
+
+(defn border-color [element value]
+  (assert (instance? Color value))
+  (add-style element "border-color" value))
 
 (defn border-style [element value]
   (assert (instance? BorderStyleValue value))
@@ -882,5 +898,7 @@
            vals
            vec
            (map (fn [class]
-                  ["." (html class)])))
+                  (assert (instance? Class class))
+                  (either (empty? (.styles (.styling class)))
+                          ["." (html class)]))))
        "</style>"])))
