@@ -8,6 +8,15 @@
     (assert (instance? HashMap classes))
     (assert-result x (instance? HashMap x))))
 
+(defn flatten-all [coll]
+  (either (map (instance? Sequence coll)
+               (fn [coll]
+                 (flat-map coll flatten-all)))
+          (list coll)))
+
+(defn html-str [x]
+  (apply str (seq (flatten-all (html x)))))
+
 (extend-type Integer
   PageElement
   (css [_ classes]
@@ -102,6 +111,7 @@
 (def content-box (reify PageElement (html [_] ["content-box"])))
 (def border-box (reify PageElement (html [_] ["border-box"])))
 (def list-item (reify PageElement (html [_] ["list-item"])))
+(def bold (reify PageElement (html [_] ["bold"])))
 
 (def nbsp (reify PageElement
             (css [_ classes] classes)
@@ -260,6 +270,7 @@
   (html [_] [color]))
 
 ;; The named colors of CSS
+(def buttonface (NamedColor "buttonface"))
 (def black (NamedColor "black"))
 (def silver (NamedColor "silver"))
 (def gray (NamedColor "gray"))
@@ -603,8 +614,13 @@
    (assert (instance? Length value))
    (add-style element "font-size" value)))
 
+(def Bold (enum bold))
+
+(def WeightValue (comp Integer
+                       Bold))
+
 (defn font-weight [element value]
-  (assert (instance? Integer value))
+  (assert (instance? WeightValue value))
   (add-style element "font-weight" value))
 
 
@@ -682,6 +698,10 @@
   (add-style element "color" value))
 
 (def DisplayValue (enum flex block list-item none))
+
+(defn float [element value]
+  (assert (instance? PositionValue value))
+  (add-style element "float" value))
 
 (defn display [element value]
   (assert (instance? DisplayValue value))
@@ -797,6 +817,7 @@
 
 (def head (tag "head"))
 (def body (tag "body"))
+(def style (tag "style"))
 (def script (tag "script"))
 (def a (tag "a"))
 (def div (tag "div"))
@@ -824,6 +845,7 @@
 (def h4 (tag "h4"))
 (def h5 (tag "h5"))
 (def h6 (tag "h6"))
+(def button (tag "button"))
 
 (extend-type String
   Stylings
