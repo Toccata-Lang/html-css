@@ -1,0 +1,74 @@
+
+(deftype StyleAttribute [name value])
+
+(deftype Tag [name contents styling attributes class]
+  (assert (instance? Classes class))
+  (assert (instance? Styling styling))
+
+  Stringable
+  (string-list [_]
+    (list "<Tag " (str name) ">")))
+
+(defprotocol Stylings
+  (add-class [element class]
+    (.class element (conj (.class element) class)))
+  (add-style [element attr-name value]
+    (.styling element (-> (.styling element)
+                          (remove (fn [style]
+                                    (and (instance? StyleAttribute style)
+                                         (= attr-name (.name style)))))
+                          (conj (StyleAttribute attr-name value))))))
+
+(deftype Styling [styles]
+  (assert (instance? Vector styles))
+
+  Collection
+  (conj [_ v]
+    (assert (instance? StyleAttribute v))
+
+    (Styling (conj styles v)))
+
+  (filter [_ f]
+    (Styling (filter styles f))))
+
+(deftype Class [name styling]
+  (assert (instance? Styling styling))
+
+  Stringable
+  (string-list [_] (list "<CSS-Class " name ">"))
+
+  Function
+  (invoke [class element]
+    (add-class element class)))
+
+(deftype Classes [classes]
+  (assert (instance? HashMap classes))
+
+  Collection
+  (conj [_ v]
+    (assert (instance? Class v))
+    (Classes (assoc classes (.name v) v))))
+
+(def empty-class (Classes {}))
+(def empty-style (Styling []))
+
+(defn class [name]
+  (Class name empty-style))
+
+(defn tag [name]
+  (fn tag-constructor
+    ([]
+     (Tag name [] empty-style {} empty-class))
+    ([attr-or-tag & contents]
+     (let [contents (either (and (instance? HashMap attr-or-tag)
+                                 (maybe contents))
+                            (cons attr-or-tag contents))]
+       (Tag name (vec contents)
+            empty-style
+            (either (instance? HashMap attr-or-tag) {})
+            empty-class)))))
+
+(defn attr [element attr-key value]
+  (assert (instance? Tag element))
+
+  (assoc-in element [.attributes attr-key] value))

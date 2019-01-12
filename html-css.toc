@@ -1,10 +1,12 @@
 
+(add-ns t (module "tag.toc"))
+
 (defprotocol PageElement
   (html [_]
     (assert-result x (instance? Vector x)))
 
   (css [_ classes]
-    ;; TODO: find a way to change the 'HashMap' assertion to 'Classes'
+    ;; TODO: find a way to change the 'HashMap' assertion to 't/Classes'
     (assert (instance? HashMap classes))
     (assert-result x (instance? HashMap x))))
 
@@ -117,47 +119,35 @@
             (css [_ classes] classes)
             (html [_] ["&nbsp;"])))
 
-(deftype StyleAttribute [name value]
+(extend-type t/StyleAttribute
   PageElement
-  (html [_]
-    [name ": " (vec (interpose (html value) " "))]))
+  (html [t]
+    [(.name t) ": " (vec (interpose (html (.value t)) " "))]))
 
-(deftype Styling [styles]
-  (assert (instance? Vector styles))
-
-  Collection
-  (conj [_ v]
-    (assert (instance? StyleAttribute v))
-
-    (Styling (conj styles v)))
-
-  (filter [_ f]
-    (Styling (filter styles f)))
-
+(extend-type t/Styling
   PageElement
-  (html [_]
-    (either (empty? styles)
+  (html [t]
+    (either (empty? (.styles t))
             (comp ["style=\""]
-                  (-> styles
+                  (-> (.styles t)
                       (reduce [] (fn [v styling]
                                    (conj v (html styling))))
                       (interpose ";\n")
                       vec
                       (conj "\""))))))
 
-(def empty-style (Styling []))
+(def empty-style (t/Styling []))
 
-(deftype Class [name styling]
-  (assert (instance? Styling styling))
-
+(extend-type t/Class
   Stringable
-  (string-list [_] (list "<CSS-Class " name ">"))
+  (string-list [class]
+    (list "<CSS-Class " (.name class) ">"))
 
   PageElement
-  (html [_]
-    (either (empty? (.styles styling))
-            [name "{\n"
-             (-> styling
+  (html [class]
+    (either (empty? (.styles (.styling class)))
+            [(.name class) "{\n"
+             (-> (.styling class)
                  .styles
                  (map html)
                  (interpose ";\n")
@@ -165,79 +155,41 @@
              "}\n\n"]))
 
   (css [class classes]
-    (assoc classes name class)))
+    (assoc classes (.name class) class)))
 
-(deftype Classes [classes]
-  (assert (instance? HashMap classes))
-
-  Collection
-  (conj [_ v]
-    (assert (instance? Class v))
-    (Classes (assoc classes (.name v) v)))
-
+(extend-type t/Classes
   PageElement
-  (html [_]
-    (either (and (empty? classes)
+  (html [t]
+    (either (and (empty? (.classes t))
                  (maybe []))
             (comp ["class=\""]
-                  (conj (-> classes
+                  (conj (-> (.classes t)
                             keys
                             (interpose " ")
                             vec)
                         "\""))))
 
-  (css [_ classes-map]
+  (css [t classes-map]
     ;; TODO: make this a call to comp, maybe
-    (reduce (vals classes) classes-map (fn [m class]
-                                         (css class m)))))
+    (reduce (vals (.classes t)) classes-map (fn [m class]
+                                              (css class m)))))
 
-(def empty-class (Classes {}))
-
-(defn class [name]
-  (Class name empty-style))
-
-
-(deftype Tag [name contents styling attributes class]
-  (assert (instance? Classes class))
-  (assert (instance? Styling styling))
-
-  Stringable
-  (string-list [_]
-    (list "<Tag " (str name) ">"))
-
+(extend-type t/Tag
   PageElement
-  (html [_]
-    ["\n<" name " "
-     (-> [(html class)
-          (html attributes)
-          (html styling)]
+  (html [t]
+    ["\n<" (.name t) " "
+     (-> [(html (.class t))
+          (html (.attributes t))
+          (html (.styling t))]
          (remove empty?)
          (interpose "\n")
          vec)
-     (either (and (empty? contents)
+     (either (and (empty? (.contents t))
                   (maybe "/>"))
-             [">" (html contents) "\n</" name ">"])])
+             [">" (html (.contents t)) "\n</" (.name t) ">"])])
 
-  (css [_ classes]
-    (css contents (css class classes))))
-
-(defn tag [name]
-  (fn tag-constructor
-    ([]
-     (Tag name [] empty-style {} empty-class))
-    ([attr-or-tag & contents]
-     (let [contents (either (and (instance? HashMap attr-or-tag)
-                                 (maybe contents))
-                            (cons attr-or-tag contents))]
-       (Tag name (vec contents)
-            empty-style
-            (either (instance? HashMap attr-or-tag) {})
-            empty-class)))))
-
-(defn attr [element attr-key value]
-  (assert (instance? Tag element))
-
-  (assoc-in element [.attributes attr-key] value))
+  (css [t classes]
+    (css (.contents t) (css (.class t) classes))))
 
 
 (deftype pt [size]
@@ -434,27 +386,12 @@
                       NamedColor
                       Global))
 
-(defprotocol Stylings
-  (add-class [element class]
-    (.class element (conj (.class element) class)))
-  (add-style [element attr-name value]
-    (.styling element (-> (.styling element)
-                          (remove (fn [style]
-                                    (and (instance? StyleAttribute style)
-                                         (= attr-name (.name style)))))
-                          (conj (StyleAttribute attr-name value))))))
-
-(extend-type Class
-  Function
-  (invoke [class element]
-    (add-class element class)))
-
 ;; Some types are also style attributes
 (def top (reify
            Function
            (invoke [_ element value]
              (assert (instance? Length value))
-             (add-style element "top" value))
+             (t/add-style element "top" value))
 
            PageElement
            (html [_] ["top"])))
@@ -463,7 +400,7 @@
             Function
             (invoke [_ element value]
               (assert (instance? Length value))
-              (add-style element "left" value))
+              (t/add-style element "left" value))
 
             PageElement
             (html [_] ["left"])))
@@ -472,7 +409,7 @@
              Function
              (invoke [_ element value]
                (assert (instance? Length value))
-               (add-style element "left" value))
+               (t/add-style element "left" value))
 
              PageElement
              (html [_] ["right"])))
@@ -481,7 +418,7 @@
               Function
               (invoke [_ element value]
                 (assert (instance? Length value))
-                (add-style element "left" value))
+                (t/add-style element "left" value))
 
               PageElement
               (html [_] ["bottom"])))
@@ -496,123 +433,123 @@
 (defn margin
   ([element value]
    (assert (instance? MarginValue value))
-   (add-style element "margin" value))
+   (t/add-style element "margin" value))
   ([element vert horiz]
    (assert (instance? MarginValue vert))
    (assert (instance? MarginValue horiz))
-   (add-style element "margin" [vert horiz]))
+   (t/add-style element "margin" [vert horiz]))
   ([element top horiz bottom]
    (assert (instance? MarginValue top))
    (assert (instance? MarginValue horiz))
    (assert (instance? MarginValue bottom))
-   (add-style element "margin" [top horiz bottom]))
+   (t/add-style element "margin" [top horiz bottom]))
   ([element top right bottom left]
    (assert (instance? MarginValue top))
    (assert (instance? MarginValue right))
    (assert (instance? MarginValue bottom))
    (assert (instance? MarginValue left))
-   (add-style element "margin" [top right bottom left])))
+   (t/add-style element "margin" [top right bottom left])))
 
 (defn margin-top
   ([element value]
    (assert (instance? MarginValue value))
-   (add-style element "margin-top" value)))
+   (t/add-style element "margin-top" value)))
 
 (defn margin-bottom
   ([element value]
    (assert (instance? MarginValue value))
-   (add-style element "margin-bottom" value)))
+   (t/add-style element "margin-bottom" value)))
 
 (defn margin-left
   ([element value]
    (assert (instance? MarginValue value))
-   (add-style element "margin-left" value)))
+   (t/add-style element "margin-left" value)))
 
 (defn margin-right
   ([element value]
    (assert (instance? MarginValue value))
-   (add-style element "margin-right" value)))
+   (t/add-style element "margin-right" value)))
 
 
 (defn padding
   ([element value]
    (assert (instance? Length value))
-   (add-style element "padding" value))
+   (t/add-style element "padding" value))
   ([element vert horiz]
    (assert (instance? Length vert))
    (assert (instance? Length horiz))
-   (add-style element "padding" [vert horiz]))
+   (t/add-style element "padding" [vert horiz]))
   ([element top horiz bottom]
    (assert (instance? Length top))
    (assert (instance? Length horiz))
    (assert (instance? Length bottom))
-   (add-style element "padding" [top horiz bottom]))
+   (t/add-style element "padding" [top horiz bottom]))
   ([element top right bottom left]
    (assert (instance? Length top))
    (assert (instance? Length right))
    (assert (instance? Length bottom))
    (assert (instance? Length left))
-   (add-style element "padding" [top right bottom left])))
+   (t/add-style element "padding" [top right bottom left])))
 
 (defn padding-top [element value]
   (assert (instance? Length value))
-  (add-style element "padding-top" value))
+  (t/add-style element "padding-top" value))
 
 (defn padding-bottom [element value]
   (assert (instance? Length value))
-  (add-style element "padding-bottom" value))
+  (t/add-style element "padding-bottom" value))
 
 (defn padding-left [element value]
   (assert (instance? Length value))
-  (add-style element "padding-left" value))
+  (t/add-style element "padding-left" value))
 
 (defn padding-right [element value]
   (assert (instance? Length value))
-  (add-style element "padding-right" value))
+  (t/add-style element "padding-right" value))
 
 (defn line-height [element value]
   (assert (instance? Length value))
-  (add-style element "line-height" value))
+  (t/add-style element "line-height" value))
 
 (defn z-index [element value]
   (assert (instance? Integer value))
-  (add-style element "z-index" value))
+  (t/add-style element "z-index" value))
 
 (defn box-shadow [element value]
   (assert (instance? String value))
-  (add-style element "box-shadow" value))
+  (t/add-style element "box-shadow" value))
 
 (def DecorationValue (enum none))
 
 (defn text-decoration
   ([element value]
    (assert (instance? DecorationValue value))
-   (add-style element "text-decoration" value)))
+   (t/add-style element "text-decoration" value)))
 
 (defn line-decoration
   ([element value]
    (assert (instance? DecorationValue value))
-   (add-style element "line-decoration" value)))
+   (t/add-style element "line-decoration" value)))
 
 (defn letter-spacing
   ([element value]
    (assert (instance? Length value))
-   (add-style element "letter-spacing" value)))
+   (t/add-style element "letter-spacing" value)))
 
 (defn font-family
   ([element value]
    (assert (instance? String value))
-   (add-style element "font-family" value)))
+   (t/add-style element "font-family" value)))
 
 (defn font-face
   ([element value]
    (assert (instance? String value))
-   (add-style element "font-face" value)))
+   (t/add-style element "font-face" value)))
 
 (defn font-size
   ([element value]
    (assert (instance? Length value))
-   (add-style element "font-size" value)))
+   (t/add-style element "font-size" value)))
 
 (def Bold (enum bold))
 
@@ -621,20 +558,20 @@
 
 (defn font-weight [element value]
   (assert (instance? WeightValue value))
-  (add-style element "font-weight" value))
+  (t/add-style element "font-weight" value))
 
 
 (def PositioningValue (enum fixed relative))
 
 (defn position [element value]
   (assert (instance? PositioningValue value))
-  (add-style element "position" value))
+  (t/add-style element "position" value))
 
 (def BackgroundAttachmentValue (enum fixed scroll))
 
 (defn background-attachment [element value]
   (assert (instance? BackgroundAttachmentValue value))
-  (add-style element "background-attachment" value))
+  (t/add-style element "background-attachment" value))
 
 (defn background-fixed [element]
   (background-attachment element fixed))
@@ -645,24 +582,24 @@
 
 (defn background-size [element value]
   (assert (instance? BackgroundLength value))
-  (add-style element "background-size" value))
+  (t/add-style element "background-size" value))
 
 (defn background-cover [element]
   (background-size element cover))
 
 (defn background-image [element img-url]
-  (add-style element "background-image" (str "url(" img-url ")")))
+  (t/add-style element "background-image" (str "url(" img-url ")")))
 
 (defn background-color [element value]
   (assert (instance? ColorValue value))
-  (add-style element "background-color" value))
+  (t/add-style element "background-color" value))
 
 
 (def OverflowValue (enum scroll))
 
 (defn overflow [element value]
   (assert (instance? Overflowvalue value))
-  (add-style element "overflow" value))
+  (t/add-style element "overflow" value))
 
 
 (def BoxSizingValue (enum initial
@@ -672,56 +609,56 @@
 
 (defn box-sizing [element value]
   (assert (instance? BoxSizingValue value))
-  (add-style element "box-sizing" value))
+  (t/add-style element "box-sizing" value))
 
 (def PositionValue (enum top bottom left right center))
 
 (defn background-position
   ([element value]
    (assert (instance? PositionValue value))
-   (add-style element "background-position" value))
+   (t/add-style element "background-position" value))
   ([element x-pos y-pos]
    (assert (instance? PositionValue x-pos))
    (assert (instance? PositionValue y-pos))
-   (add-style element "background-position" [x-pos y-pos])))
+   (t/add-style element "background-position" [x-pos y-pos])))
 
 (defn width [element value]
   (assert (instance? Length value))
-  (add-style element "width" value))
+  (t/add-style element "width" value))
 
 (defn height [element value]
   (assert (instance? Length value))
-  (add-style element "height" value))
+  (t/add-style element "height" value))
 
 (defn color [element value]
   (assert (instance? ColorValue value))
-  (add-style element "color" value))
+  (t/add-style element "color" value))
 
 (def DisplayValue (enum flex block list-item none))
 
 (defn float [element value]
   (assert (instance? PositionValue value))
-  (add-style element "float" value))
+  (t/add-style element "float" value))
 
 (defn display [element value]
   (assert (instance? DisplayValue value))
-  (add-style element "display" value))
+  (t/add-style element "display" value))
 
 (defn flex-row [element]
   (-> element
       (display flex)
-      (add-style "flex-direction" row)))
+      (t/add-style "flex-direction" row)))
 
 (defn flex-column [element]
   (-> element
       (display flex)
-      (add-style "flex-direction" column)))
+      (t/add-style "flex-direction" column)))
 
 (defn flex-wrap [element]
-  (add-style element "flex-wrap" "wrap"))
+  (t/add-style element "flex-wrap" "wrap"))
 
 (defn flex-no-wrap [element]
-  (add-style element "flex-wrap" "no-wrap"))
+  (t/add-style element "flex-wrap" "no-wrap"))
 
 (def Justification (enum center
                          flex-end
@@ -730,65 +667,65 @@
 
 (defn justify-content [element value]
   (assert (instance? Justification value))
-  (add-style element "justify-content" value))
+  (t/add-style element "justify-content" value))
 
 (defn text-align [element value]
   (assert (instance? Justification value))
-  (add-style element "text-align" value))
+  (t/add-style element "text-align" value))
 
 (defn align-items [element value]
   (assert (instance? Justification value))
-  (add-style element "align-items" value))
+  (t/add-style element "align-items" value))
 
 (defn max-width [element value]
   (assert (instance? Length value))
-  (add-style element "max-width" value))
+  (t/add-style element "max-width" value))
 
 (defn min-width [element value]
   (assert (instance? Length value))
-  (add-style element "min-width" value))
+  (t/add-style element "min-width" value))
 
 (defn max-height [element value]
   (assert (instance? Length value))
-  (add-style element "max-height" value))
+  (t/add-style element "max-height" value))
 
 (defn min-height [element value]
   (assert (instance? Length value))
-  (add-style element "min-height" value))
+  (t/add-style element "min-height" value))
 
 (def BorderStyleValue (enum solid hidden dotted dashed double groove ridge inset outset))
 
 (defn border-color [element value]
   (assert (instance? Color value))
-  (add-style element "border-color" value))
+  (t/add-style element "border-color" value))
 
 (defn border-style [element value]
   (assert (instance? BorderStyleValue value))
-  (add-style element "border-style" value))
+  (t/add-style element "border-style" value))
 
 (defn border-width
   ([element value]
    (assert (instance? Length value))
-   (add-style element "border-width" value))
+   (t/add-style element "border-width" value))
   ([element vert horiz]
    (assert (instance? Length vert))
    (assert (instance? Length horiz))
-   (add-style element "border-width" [vert horiz]))
+   (t/add-style element "border-width" [vert horiz]))
   ([element top horiz bottom]
    (assert (instance? Length top))
    (assert (instance? Length horiz))
    (assert (instance? Length bottom))
-   (add-style element "border-width" [top horiz bottom]))
+   (t/add-style element "border-width" [top horiz bottom]))
   ([element top right bottom left]
    (assert (instance? Length top))
    (assert (instance? Length right))
    (assert (instance? Length bottom))
    (assert (instance? Length left))
-   (add-style element "border-width" [top right bottom left])))
+   (t/add-style element "border-width" [top right bottom left])))
 
 (defn border-radius [element value]
   (assert (instance? Length value))
-  (add-style element "border-radius" value))
+  (t/add-style element "border-radius" value))
 
 
 (def ListStyleTypeValue (enum none
@@ -805,55 +742,55 @@
 
 (defn list-style [element type]
   (assert (instance? ListStyleTypeValue type))
-  (add-style element "list-style" type))
+  (t/add-style element "list-style" type))
 
 (def ListStylePosValue (enum inside
                              outside))
 
 (defn list-style-position [element type]
   (assert (instance? ListStylePosValue type))
-  (add-style element "list-style" type))
+  (t/add-style element "list-style" type))
 
 
-(def head (tag "head"))
-(def body (tag "body"))
-(def style (tag "style"))
-(def script (tag "script"))
-(def a (tag "a"))
-(def div (tag "div"))
-(def p (tag "p"))
-(def span (tag "span"))
-(def article (tag "article"))
-(def aside (tag "aside"))
-(def details (tag "details"))
-(def footer (tag "footer"))
-(def header (tag "header"))
-(def hgroup (tag "hgroup"))
-(def menu (tag "menu"))
-(def nav (tag "nav"))
-(def section (tag "section"))
-(def ol (tag "ol"))
-(def ul (tag "ul"))
-(def li (tag "li"))
-(def link (tag "link"))
-(def title (tag "title"))
-(def meta (tag "meta"))
-(def img (tag "img"))
-(def h1 (tag "h1"))
-(def h2 (tag "h2"))
-(def h3 (tag "h3"))
-(def h4 (tag "h4"))
-(def h5 (tag "h5"))
-(def h6 (tag "h6"))
-(def button (tag "button"))
+(def head (t/tag "head"))
+(def body (t/tag "body"))
+(def style (t/tag "style"))
+(def script (t/tag "script"))
+(def a (t/tag "a"))
+(def div (t/tag "div"))
+(def p (t/tag "p"))
+(def span (t/tag "span"))
+(def article (t/tag "article"))
+(def aside (t/tag "aside"))
+(def details (t/tag "details"))
+(def footer (t/tag "footer"))
+(def header (t/tag "header"))
+(def hgroup (t/tag "hgroup"))
+(def menu (t/tag "menu"))
+(def nav (t/tag "nav"))
+(def section (t/tag "section"))
+(def ol (t/tag "ol"))
+(def ul (t/tag "ul"))
+(def li (t/tag "li"))
+(def link (t/tag "link"))
+(def title (t/tag "title"))
+(def meta (t/tag "meta"))
+(def img (t/tag "img"))
+(def h1 (t/tag "h1"))
+(def h2 (t/tag "h2"))
+(def h3 (t/tag "h3"))
+(def h4 (t/tag "h4"))
+(def h5 (t/tag "h5"))
+(def h6 (t/tag "h6"))
+(def button (t/tag "button"))
 
 (extend-type String
-  Stylings
-  (add-class [s class]
-    (add-class (span s) class))
+  t/Stylings
+  (t/add-class [s class]
+    (t/add-class (span s) class))
 
-  (add-style [s attr-name value]
-    (add-style (span s) attr-name value)))
+  (t/add-style [s attr-name value]
+    (t/add-style (span s) attr-name value)))
 
 (deftype HTMLPage [head body]
   PageElement
@@ -888,7 +825,7 @@
   (Not []))
 
 (deftype MediaQuery [styling classes]
-  (assert (instance? Styling styling))
+  (assert (instance? t/Styling styling))
 
   PageElement
   (html [_]
