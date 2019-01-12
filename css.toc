@@ -1,0 +1,987 @@
+(add-ns d (module "document.toc"))
+(add-ns t (module "tag.toc"))
+
+;; CSS values
+(def row
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["row"])))
+(def column
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["column"])))
+(def cover
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["cover"])))
+(def flex
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["flex"])))
+(def flex-begin
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["flex-begin"])))
+(def center
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["center"])))
+(def space-between
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["space-between"])))
+(def block
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["block"])))
+(def fixed
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["fixed"])))
+(def relative
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["relative"])))
+(def auto
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["auto"])))
+(def normal
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["normal"])))
+(def none
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["none"])))
+(def disc
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["disc"])))
+(def circle
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["circle"])))
+(def square
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["square"])))
+(def decimal
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["decimal"])))
+(def lower-roman
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["lower-roman"])))
+(def static
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["static"])))
+(def absolute
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["absolute"])))
+(def sticky
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["sticky"])))
+(def local
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["local"])))
+(def contain
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["contain"])))
+(def visible
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["visible"])))
+(def inline-start
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["inline-start"])))
+(def inline-end
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["inline-end"])))
+(def upper-roman
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["upper-roman"])))
+(def lower-alpha
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["lower-alpha"])))
+(def lower-latin
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["lower-latin"])))
+(def upper-alpha
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["upper-alpha"])))
+(def upper-latin
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["upper-latin"])))
+(def solid
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["solid"])))
+(def hidden
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["hidden"])))
+(def dotted
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["dotted"])))
+(def dashed
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["dashed"])))
+(def double
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["double"])))
+(def groove
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["groove"])))
+(def ridge
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["ridge"])))
+(def inset
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["inset"])))
+(def outset
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["outset"])))
+(def scroll
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["scroll"])))
+(def outside
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["outside"])))
+(def inside
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["inside"])))
+(def revert
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["revert"])))
+(def initial
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["initial"])))
+(def inherit
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["inherit"])))
+(def unset
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["unset"])))
+(def content-box
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["content-box"])))
+(def border-box
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["border-box"])))
+(def list-item
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["list-item"])))
+(def bold
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["bold"])))
+(def xx-small
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["xx-small"])))
+(def x-small
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["x-small"])))
+(def small
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["small"])))
+(def medium
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["medium"])))
+(def large
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["large"])))
+(def x-large
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["x-large"])))
+(def xx-large
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["xx-large"])))
+(def smaller
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["smaller"])))
+(def larger
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["larger"])))
+(def serif
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["serif"])))
+(def sans-serif
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["sans-serif"])))
+(def monospace
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["monospace"])))
+(def cursive
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["cursive"])))
+(def fantasy
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["fantasy"])))
+(def system-ui
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["system-ui"])))
+(def lighter
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["lighter"])))
+(def bolder
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["bolder"])))
+(def flow
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["flow"])))
+(def table
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["table"])))
+(def grid
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["grid"])))
+(def inline
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["inline"])))
+(def run-in
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["run-in"])))
+(def ruby
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["ruby"])))
+(def row-reverse
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["row-reverse"])))
+(def column-reverse
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["column-reverse"])))
+(def nowrap
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["nowrap"])))
+(def wrap-reverse
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["wrap-reverse"])))
+(def unsafe
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["unsafe"])))
+(def safe
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["safe"])))
+(def start
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["start"])))
+(def end
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["end"])))
+(def flex-start
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["flex-start"])))
+(def flex-end
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["flex-end"])))
+(def space-around
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["space-around"])))
+(def space-evenly
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["space-evenly"])))
+(def stretch
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["stretch"])))
+(def match-parent
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["match-parent"])))
+(def justify
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["justify"])))
+(def justify-all
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["justify-all"])))
+(def self-start
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["self-start"])))
+(def self-end
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["self-end"])))
+(def fill-available
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["fill-available"])))
+(def fit-content
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["fit-content"])))
+(def min-content
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["min-content"])))
+(def max-content
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["max-content"])))
+(def thick
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["thick"])))
+(def thin
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["thin"])))
+
+(def css-wrap
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["wrap"])))
+
+
+(def nbsp
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["&nbsp;"])))
+
+(def Global (enum initial inherit unset revert none initial inherit unset revert none))
+
+(def Auto (enum auto initial inherit unset revert none))
+
+;; CSS Lengths
+
+(deftype px [size]
+  (assert (instance? Integer size))
+  d/DocElement
+  (d/css [_ classes] classes)
+  (d/html [_] [(str size "px")]))
+
+(deftype pt [size]
+  (assert (instance? Integer size))
+  d/DocElement
+  (d/css [_ classes] classes)
+  (d/html [_] [(str size "pt")]))
+
+(deftype percent [size]
+  (assert (instance? Integer size))
+  d/DocElement
+  (d/css [_ classes] classes)
+  (d/html [_] [(str size "%")]))
+
+(def SimpleLength (comp Global px pt String))
+
+(def Length (comp Global px pt percent String))
+
+;; Named colors
+(deftype NamedColor [color]
+  d/DocElement
+  (d/css [_ classes] classes)
+  (d/html [_] [color]))
+
+(def buttonface (NamedColor "buttonface"))
+(def black (NamedColor "black"))
+(def silver (NamedColor "silver"))
+(def gray (NamedColor "gray"))
+(def white (NamedColor "white"))
+(def maroon (NamedColor "maroon"))
+(def red (NamedColor "red"))
+(def purple (NamedColor "purple"))
+(def fuchsia (NamedColor "fuchsia"))
+(def green (NamedColor "green"))
+(def lime (NamedColor "lime"))
+(def olive (NamedColor "olive"))
+(def yellow (NamedColor "yellow"))
+(def navy (NamedColor "navy"))
+(def blue (NamedColor "blue"))
+(def teal (NamedColor "teal"))
+(def aqua (NamedColor "aqua"))
+(def orange (NamedColor "orange"))
+(def aliceblue (NamedColor "aliceblue"))
+(def antiquewhite (NamedColor "antiquewhite"))
+(def aquamarine (NamedColor "aquamarine"))
+(def azure (NamedColor "azure"))
+(def beige (NamedColor "beige"))
+(def bisque (NamedColor "bisque"))
+(def blanchedalmond (NamedColor "blanchedalmond"))
+(def blueviolet (NamedColor "blueviolet"))
+(def brown (NamedColor "brown"))
+(def burlywood (NamedColor "burlywood"))
+(def cadetblue (NamedColor "cadetblue"))
+(def chartreuse (NamedColor "chartreuse"))
+(def chocolate (NamedColor "chocolate"))
+(def coral (NamedColor "coral"))
+(def cornflowerblue (NamedColor "cornflowerblue"))
+(def cornsilk (NamedColor "cornsilk"))
+(def crimson (NamedColor "crimson"))
+(def cyan (NamedColor "cyan"))
+(def darkblue (NamedColor "darkblue"))
+(def darkcyan (NamedColor "darkcyan"))
+(def darkgoldenrod (NamedColor "darkgoldenrod"))
+(def darkgray (NamedColor "darkgray"))
+(def darkgreen (NamedColor "darkgreen"))
+(def darkgrey (NamedColor "darkgrey"))
+(def darkkhaki (NamedColor "darkkhaki"))
+(def darkmagenta (NamedColor "darkmagenta"))
+(def darkolivegreen (NamedColor "darkolivegreen"))
+(def darkorange (NamedColor "darkorange"))
+(def darkorchid (NamedColor "darkorchid"))
+(def darkred (NamedColor "darkred"))
+(def darksalmon (NamedColor "darksalmon"))
+(def darkseagreen (NamedColor "darkseagreen"))
+(def darkslateblue (NamedColor "darkslateblue"))
+(def darkslategray (NamedColor "darkslategray"))
+(def darkslategrey (NamedColor "darkslategrey"))
+(def darkturquoise (NamedColor "darkturquoise"))
+(def darkviolet (NamedColor "darkviolet"))
+(def deeppink (NamedColor "deeppink"))
+(def deepskyblue (NamedColor "deepskyblue"))
+(def dimgray (NamedColor "dimgray"))
+(def dimgrey (NamedColor "dimgrey"))
+(def dodgerblue (NamedColor "dodgerblue"))
+(def firebrick (NamedColor "firebrick"))
+(def floralwhite (NamedColor "floralwhite"))
+(def forestgreen (NamedColor "forestgreen"))
+(def gainsboro (NamedColor "gainsboro"))
+(def ghostwhite (NamedColor "ghostwhite"))
+(def gold (NamedColor "gold"))
+(def goldenrod (NamedColor "goldenrod"))
+(def greenyellow (NamedColor "greenyellow"))
+(def grey (NamedColor "grey"))
+(def honeydew (NamedColor "honeydew"))
+(def hotpink (NamedColor "hotpink"))
+(def indianred (NamedColor "indianred"))
+(def indigo (NamedColor "indigo"))
+(def ivory (NamedColor "ivory"))
+(def khaki (NamedColor "khaki"))
+(def lavender (NamedColor "lavender"))
+(def lavenderblush (NamedColor "lavenderblush"))
+(def lawngreen (NamedColor "lawngreen"))
+(def lemonchiffon (NamedColor "lemonchiffon"))
+(def lightblue (NamedColor "lightblue"))
+(def lightcoral (NamedColor "lightcoral"))
+(def lightcyan (NamedColor "lightcyan"))
+(def lightgoldenrodyellow (NamedColor "lightgoldenrodyellow"))
+(def lightgray (NamedColor "lightgray"))
+(def lightgreen (NamedColor "lightgreen"))
+(def lightgrey (NamedColor "lightgrey"))
+(def lightpink (NamedColor "lightpink"))
+(def lightsalmon (NamedColor "lightsalmon"))
+(def lightseagreen (NamedColor "lightseagreen"))
+(def lightskyblue (NamedColor "lightskyblue"))
+(def lightslategray (NamedColor "lightslategray"))
+(def lightslategrey (NamedColor "lightslategrey"))
+(def lightsteelblue (NamedColor "lightsteelblue"))
+(def lightyellow (NamedColor "lightyellow"))
+(def limegreen (NamedColor "limegreen"))
+(def linen (NamedColor "linen"))
+(def magenta (NamedColor "magenta"))
+(def mediumaquamarine (NamedColor "mediumaquamarine"))
+(def mediumblue (NamedColor "mediumblue"))
+(def mediumorchid (NamedColor "mediumorchid"))
+(def mediumpurple (NamedColor "mediumpurple"))
+(def mediumseagreen (NamedColor "mediumseagreen"))
+(def mediumslateblue (NamedColor "mediumslateblue"))
+(def mediumspringgreen (NamedColor "mediumspringgreen"))
+(def mediumturquoise (NamedColor "mediumturquoise"))
+(def mediumvioletred (NamedColor "mediumvioletred"))
+(def midnightblue (NamedColor "midnightblue"))
+(def mintcream (NamedColor "mintcream"))
+(def mistyrose (NamedColor "mistyrose"))
+(def moccasin (NamedColor "moccasin"))
+(def navajowhite (NamedColor "navajowhite"))
+(def oldlace (NamedColor "oldlace"))
+(def olivedrab (NamedColor "olivedrab"))
+(def orangered (NamedColor "orangered"))
+(def orchid (NamedColor "orchid"))
+(def palegoldenrod (NamedColor "palegoldenrod"))
+(def palegreen (NamedColor "palegreen"))
+(def paleturquoise (NamedColor "paleturquoise"))
+(def palevioletred (NamedColor "palevioletred"))
+(def papayawhip (NamedColor "papayawhip"))
+(def peachpuff (NamedColor "peachpuff"))
+(def peru (NamedColor "peru"))
+(def pink (NamedColor "pink"))
+(def plum (NamedColor "plum"))
+(def powderblue (NamedColor "powderblue"))
+(def rosybrown (NamedColor "rosybrown"))
+(def royalblue (NamedColor "royalblue"))
+(def saddlebrown (NamedColor "saddlebrown"))
+(def salmon (NamedColor "salmon"))
+(def sandybrown (NamedColor "sandybrown"))
+(def seagreen (NamedColor "seagreen"))
+(def seashell (NamedColor "seashell"))
+(def sienna (NamedColor "sienna"))
+(def skyblue (NamedColor "skyblue"))
+(def slateblue (NamedColor "slateblue"))
+(def slategray (NamedColor "slategray"))
+(def slategrey (NamedColor "slategrey"))
+(def snow (NamedColor "snow"))
+(def springgreen (NamedColor "springgreen"))
+(def steelblue (NamedColor "steelblue"))
+(def tan (NamedColor "tan"))
+(def thistle (NamedColor "thistle"))
+(def tomato (NamedColor "tomato"))
+(def turquoise (NamedColor "turquoise"))
+(def violet (NamedColor "violet"))
+(def wheat (NamedColor "wheat"))
+(def whitesmoke (NamedColor "whitesmoke"))
+(def yellowgreen (NamedColor "yellowgreen"))
+(def rebeccapurple (NamedColor "rebeccapurple"))
+
+
+(deftype HexColor [color]
+  d/DocElement
+  (d/html [_] [(str "#" color)]))
+
+(defn hex-color [s] (HexColor s))
+
+(def ColorValue (comp Global HexColor NamedColor))
+
+;; Some types are also style attributes
+
+(def top (reify
+           Function
+           (invoke [_ element value]
+             (assert (instance? Length value))
+             (t/add-style element "top" value))
+
+           d/DocElement
+           (d/css [_ classes] classes)
+           (d/html [_] ["top"])))
+(def left (reify
+           Function
+           (invoke [_ element value]
+             (assert (instance? Length value))
+             (t/add-style element "left" value))
+
+           d/DocElement
+           (d/css [_ classes] classes)
+           (d/html [_] ["left"])))
+(def right (reify
+           Function
+           (invoke [_ element value]
+             (assert (instance? Length value))
+             (t/add-style element "right" value))
+
+           d/DocElement
+           (d/css [_ classes] classes)
+           (d/html [_] ["right"])))
+(def bottom (reify
+           Function
+           (invoke [_ element value]
+             (assert (instance? Length value))
+             (t/add-style element "bottom" value))
+
+           d/DocElement
+           (d/css [_ classes] classes)
+           (d/html [_] ["bottom"])))
+(def MarginValue (comp Global Auto Length String))
+
+(def Normal (enum normal initial inherit unset revert none))
+
+(def Number (comp Global Integer))
+
+(def LineHeight (comp Global Normal Length Integer))
+
+(def LengthNormal (comp Global Normal SimpleLength))
+
+(def GenericFont (enum serif sans-serif monospace cursive fantasy system-ui initial inherit unset revert none))
+
+(def FontFamily (comp Global GenericFont String))
+
+(def FontSizes (enum xx-small x-small small medium large x-large xx-large smaller larger initial inherit unset revert none))
+
+(def FontSize (comp Global Length FontSizes))
+
+(def Boldness (enum normal bold lighter bolder initial inherit unset revert none))
+
+(def FontWeight (comp Global Boldness Integer))
+
+(def Positions (enum static relative absolute fixed sticky initial inherit unset revert none))
+
+(def Attachments (enum scroll fixed local initial inherit unset revert none))
+
+(def Coverage (enum contain cover initial inherit unset revert none))
+
+(def BkgCoverage (comp Global Coverage Length))
+
+(def Overflow (enum visible hidden scroll auto initial inherit unset revert none))
+
+(def BoxSizing (enum content-box border-box initial inherit unset revert none))
+
+(def CardinalDirs (enum top bottom left right center initial inherit unset revert none))
+
+(def BkgPosition (comp Global CardinalDirs Length))
+
+(def Float (enum left right inline-start inline-end initial inherit unset revert none))
+
+(def Display (enum flex block flow table grid inline run-in ruby initial inherit unset revert none))
+
+(def FlexDir (enum row column row-reverse column-reverse initial inherit unset revert none))
+
+(def FlexWrap (enum css-wrap nowrap wrap-reverse initial inherit unset revert none))
+
+(def Justify (enum center start end flex-start flex-end left right normal space-between space-around space-evenly stretch initial inherit unset revert none))
+
+(def Safety (enum safe unsafe initial inherit unset revert none))
+
+(def TextAlignment (enum left right center justify justify-all start end match-parent initial inherit unset revert none))
+
+(def ItemAlignment (enum normal stretch center start end flex-start flex-end self-start self-end initial inherit unset revert none))
+
+(def max-content (enum min-content fit-content fill-available initial inherit unset revert none))
+
+(def MinMaxContent (comp Global max-content Length))
+
+(def BorderStyle (enum hidden dotted dashed solid double groove ridge inset outset initial inherit unset revert none))
+
+(def BorderWidths (enum thin medium thick initial inherit unset revert none))
+
+(def BorderWidth (comp Global BorderWidths Length))
+
+(def ListStyle (enum disc circle square decimal lower-roman upper-roman lower-alpha lower-latin upper-alpha upper-latin initial inherit unset revert none))
+
+(def inside (enum outside initial inherit unset revert none))
+
+
+(defn margin
+([element arg0]
+(assert (instance? MarginValue arg0))
+(t/add-style element "margin" [arg0]))
+([element arg1 arg0]
+(assert (instance? MarginValue arg1))
+(assert (instance? MarginValue arg0))
+(t/add-style element "margin" [arg1 arg0]))
+([element arg2 arg1 arg0]
+(assert (instance? MarginValue arg2))
+(assert (instance? MarginValue arg1))
+(assert (instance? MarginValue arg0))
+(t/add-style element "margin" [arg2 arg1 arg0]))
+([element arg2 arg1 arg3 arg0]
+(assert (instance? MarginValue arg2))
+(assert (instance? MarginValue arg1))
+(assert (instance? MarginValue arg3))
+(assert (instance? MarginValue arg0))
+(t/add-style element "margin" [arg2 arg1 arg3 arg0])))
+
+(defn margin-top [element arg0]
+(assert (instance? MarginValue arg0))
+(t/add-style element "margin-top" [arg0]))
+
+(defn margin-left [element arg0]
+(assert (instance? MarginValue arg0))
+(t/add-style element "margin-left" [arg0]))
+
+(defn margin-right [element arg0]
+(assert (instance? MarginValue arg0))
+(t/add-style element "margin-right" [arg0]))
+
+(defn margin-right [element arg0]
+(assert (instance? MarginValue arg0))
+(t/add-style element "margin-right" [arg0]))
+
+(defn padding
+([element arg0]
+(assert (instance? Length arg0))
+(t/add-style element "padding" [arg0]))
+([element arg1 arg0]
+(assert (instance? Length arg1))
+(assert (instance? Length arg0))
+(t/add-style element "padding" [arg1 arg0]))
+([element arg2 arg1 arg0]
+(assert (instance? Length arg2))
+(assert (instance? Length arg1))
+(assert (instance? Length arg0))
+(t/add-style element "padding" [arg2 arg1 arg0]))
+([element arg2 arg1 arg3 arg0]
+(assert (instance? Length arg2))
+(assert (instance? Length arg1))
+(assert (instance? Length arg3))
+(assert (instance? Length arg0))
+(t/add-style element "padding" [arg2 arg1 arg3 arg0])))
+
+(defn padding-top [element arg0]
+(assert (instance? Length arg0))
+(t/add-style element "padding-top" [arg0]))
+
+(defn padding-left [element arg0]
+(assert (instance? Length arg0))
+(t/add-style element "padding-left" [arg0]))
+
+(defn padding-right [element arg0]
+(assert (instance? Length arg0))
+(t/add-style element "padding-right" [arg0]))
+
+(defn padding-right [element arg0]
+(assert (instance? Length arg0))
+(t/add-style element "padding-right" [arg0]))
+
+(defn line-height [element arg0]
+(assert (instance? LineHeight arg0))
+(t/add-style element "line-height" [arg0]))
+
+(defn z-index [element arg0]
+(assert (instance? Number arg0))
+(t/add-style element "z-index" [arg0]))
+
+(defn box-shadow [element arg0]
+(assert (instance? String arg0))
+(t/add-style element "box-shadow" [arg0]))
+
+(defn line-decoration [element arg0]
+(assert (instance? String arg0))
+(t/add-style element "line-decoration" [arg0]))
+
+(defn text-decoration [element arg0]
+(assert (instance? String arg0))
+(t/add-style element "text-decoration" [arg0]))
+
+(defn letter-spacing [element arg0]
+(assert (instance? LengthNormal arg0))
+(t/add-style element "letter-spacing" [arg0]))
+
+(defn font-family [element arg0]
+(assert (instance? FontFamily arg0))
+(t/add-style element "font-family" [arg0]))
+
+(defn font-size [element arg0]
+(assert (instance? FontSize arg0))
+(t/add-style element "font-size" [arg0]))
+
+(defn font-weight [element arg0]
+(assert (instance? FontWeight arg0))
+(t/add-style element "font-weight" [arg0]))
+
+(defn position [element arg0]
+(assert (instance? Positions arg0))
+(t/add-style element "position" [arg0]))
+
+(defn background-attachment [element arg0]
+(assert (instance? Attachments arg0))
+(t/add-style element "background-attachment" [arg0]))
+
+(defn background-size
+([element arg0]
+(assert (instance? BkgCoverage arg0))
+(t/add-style element "background-size" [arg0]))
+([element arg1 arg0]
+(assert (instance? BkgCoverage arg1))
+(assert (instance? BkgCoverage arg0))
+(t/add-style element "background-size" [arg1 arg0])))
+
+(defn backgroundd-image [element arg0]
+(assert (instance? String arg0))
+(t/add-style element "backgroundd-image" [arg0]))
+
+(defn backgroundd-color [element arg0]
+(assert (instance? ColorValue arg0))
+(t/add-style element "backgroundd-color" [arg0]))
+
+(defn background-position
+([element arg0]
+(assert (instance? BkgPosition arg0))
+(t/add-style element "background-position" [arg0]))
+([element arg1 arg0]
+(assert (instance? BkgPosition arg1))
+(assert (instance? BkgPosition arg0))
+(t/add-style element "background-position" [arg1 arg0])))
+
+(defn overflow [element arg0]
+(assert (instance? Overflow arg0))
+(t/add-style element "overflow" [arg0]))
+
+(defn box-sizing [element arg0]
+(assert (instance? BoxSizing arg0))
+(t/add-style element "box-sizing" [arg0]))
+
+(defn width [element arg0]
+(assert (instance? Length arg0))
+(t/add-style element "width" [arg0]))
+
+(defn height [element arg0]
+(assert (instance? Length arg0))
+(t/add-style element "height" [arg0]))
+
+(defn color [element arg0]
+(assert (instance? ColorValue arg0))
+(t/add-style element "color" [arg0]))
+
+(defn float [element arg0]
+(assert (instance? Float arg0))
+(t/add-style element "float" [arg0]))
+
+(defn flex-direction [element arg0]
+(assert (instance? FlexDir arg0))
+(t/add-style element "flex-direction" [arg0]))
+
+(defn flex-wrap [element arg0]
+(assert (instance? FlexWrap arg0))
+(t/add-style element "flex-wrap" [arg0]))
+
+(defn justify-content
+([element arg0]
+(assert (instance? Justify arg0))
+(t/add-style element "justify-content" [arg0]))
+([element arg1 arg0]
+(assert (instance? Justify arg1))
+(assert (instance? Safety arg0))
+(t/add-style element "justify-content" [arg1 arg0])))
+
+(defn text-align [element arg0]
+(assert (instance? TextAlignment arg0))
+(t/add-style element "text-align" [arg0]))
+
+(defn align-items [element arg0]
+(assert (instance? ItemAlignment arg0))
+(t/add-style element "align-items" [arg0]))
+
+(defn max-width [element arg0]
+(assert (instance? MinMaxContent arg0))
+(t/add-style element "max-width" [arg0]))
+
+(defn min-width [element arg0]
+(assert (instance? MinMaxContent arg0))
+(t/add-style element "min-width" [arg0]))
+
+(defn max-height [element arg0]
+(assert (instance? MinMaxContent arg0))
+(t/add-style element "max-height" [arg0]))
+
+(defn min-height [element arg0]
+(assert (instance? MinMaxContent arg0))
+(t/add-style element "min-height" [arg0]))
+
+(defn border-color [element arg0]
+(assert (instance? ColorValue arg0))
+(t/add-style element "border-color" [arg0]))
+
+(defn border-style
+([element arg0]
+(assert (instance? BorderStyle arg0))
+(t/add-style element "border-style" [arg0]))
+([element arg1 arg0]
+(assert (instance? BorderStyle arg1))
+(assert (instance? BorderStyle arg0))
+(t/add-style element "border-style" [arg1 arg0]))
+([element arg2 arg1 arg0]
+(assert (instance? BorderStyle arg2))
+(assert (instance? BorderStyle arg1))
+(assert (instance? BorderStyle arg0))
+(t/add-style element "border-style" [arg2 arg1 arg0]))
+([element arg2 arg1 arg3 arg0]
+(assert (instance? BorderStyle arg2))
+(assert (instance? BorderStyle arg1))
+(assert (instance? BorderStyle arg3))
+(assert (instance? BorderStyle arg0))
+(t/add-style element "border-style" [arg2 arg1 arg3 arg0])))
+
+(defn border-width
+([element arg0]
+(assert (instance? BorderWidth arg0))
+(t/add-style element "border-width" [arg0]))
+([element arg1 arg0]
+(assert (instance? BorderWidth arg1))
+(assert (instance? BorderWidth arg0))
+(t/add-style element "border-width" [arg1 arg0]))
+([element arg2 arg1 arg0]
+(assert (instance? BorderWidth arg2))
+(assert (instance? BorderWidth arg1))
+(assert (instance? BorderWidth arg0))
+(t/add-style element "border-width" [arg2 arg1 arg0]))
+([element arg2 arg1 arg3 arg0]
+(assert (instance? BorderWidth arg2))
+(assert (instance? BorderWidth arg1))
+(assert (instance? BorderWidth arg3))
+(assert (instance? BorderWidth arg0))
+(t/add-style element "border-width" [arg2 arg1 arg3 arg0])))
+
+(defn border-radius
+([element arg0]
+(assert (instance? Length arg0))
+(t/add-style element "border-radius" [arg0]))
+([element arg1 arg0]
+(assert (instance? Length arg1))
+(assert (instance? Length arg0))
+(t/add-style element "border-radius" [arg1 arg0]))
+([element arg2 arg1 arg0]
+(assert (instance? Length arg2))
+(assert (instance? Length arg1))
+(assert (instance? Length arg0))
+(t/add-style element "border-radius" [arg2 arg1 arg0]))
+([element arg2 arg1 arg3 arg0]
+(assert (instance? Length arg2))
+(assert (instance? Length arg1))
+(assert (instance? Length arg3))
+(assert (instance? Length arg0))
+(t/add-style element "border-radius" [arg2 arg1 arg3 arg0])))
+
+(defn list-style-type [element arg0]
+(assert (instance? ListStyle arg0))
+(t/add-style element "list-style-type" [arg0]))
+
+(defn list-style-Position [element arg0]
+(assert (instance? inside arg0))
+(t/add-style element "list-style-Position" [arg0]))
+

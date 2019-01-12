@@ -1,0 +1,137 @@
+
+(add-ns t (module "tag.toc"))
+
+(defprotocol DocElement
+  (html [_]
+    (assert-result x (instance? Vector x)))
+
+  (css [_ classes]
+    ;; TODO: find a way to change the 'HashMap' assertion to 't/Classes'
+    (assert (instance? HashMap classes))
+    (assert-result x (instance? HashMap x))))
+
+(defn flatten-all [coll]
+  (either (map (instance? Sequence coll)
+               (fn [coll]
+                 (flat-map coll flatten-all)))
+          (list coll)))
+
+(defn html-str [x]
+  (apply str (seq (flatten-all (html x)))))
+
+(extend-type Integer
+  DocElement
+  (css [_ classes]
+    classes)
+
+  (html [n]
+    [(str n)]))
+
+(extend-type Symbol
+  DocElement
+  (css [_ classes]
+    classes)
+
+  (html [s]
+    [(str s)]))
+
+(extend-type String
+  DocElement
+  (css [_ classes]
+    classes)
+
+  (html [s]
+    [s]))
+
+(extend-type HashMap
+  DocElement
+  (html [m]
+    (-> m
+        seq
+        (map (fn [[k v]]
+               [(str k "=\"" v "\"")]))
+        (interpose "\n")
+        vec)))
+
+(extend-type List
+  DocElement
+  (html [l]
+    (reduce l [] (fn [v x]
+                   (conj v (html x)))))
+  (css [l classes]
+    (reduce l classes (fn [classes x]
+                        (css x classes)))))
+
+(extend-type Vector
+  DocElement
+  (html [v]
+    (map v html))
+  (css [v classes]
+    (reduce v classes (fn [classes x]
+                        (css x classes)))))
+
+(extend-type t/Class
+  DocElement
+  (html [class]
+    (either (empty? (.styles (.styling class)))
+            [(.name class) "{\n"
+             (-> (.styling class)
+                 .styles
+                 (map html)
+                 (interpose ";\n")
+                 vec)
+             "}\n\n"]))
+
+  (css [class classes]
+    (assoc classes (.name class) class)))
+
+(extend-type t/Classes
+  DocElement
+  (html [t]
+    (either (and (empty? (.classes t))
+                 (maybe []))
+            (comp ["class=\""]
+                  (conj (-> (.classes t)
+                            keys
+                            (interpose " ")
+                            vec)
+                        "\""))))
+
+  (css [t classes-map]
+    ;; TODO: make this a call to comp, maybe
+    (reduce (vals (.classes t)) classes-map (fn [m class]
+                                              (css class m)))))
+
+(extend-type t/Tag
+  DocElement
+  (html [t]
+    ["\n<" (.name t) " "
+     (-> [(html (.class t))
+          (html (.attributes t))
+          (html (.styling t))]
+         (remove empty?)
+         (interpose "\n")
+         vec)
+     (either (and (empty? (.contents t))
+                  (maybe "/>"))
+             [">" (html (.contents t)) "\n</" (.name t) ">"])])
+
+  (css [t classes]
+    (css (.contents t) (css (.class t) classes))))
+
+(extend-type t/StyleAttribute
+  DocElement
+  (html [t]
+    [(.name t) ": " (vec (interpose (html (.value t)) " "))]))
+
+(extend-type Styling
+  DocElement
+  (html [t]
+    (either (empty? (.styles t))
+            (comp ["style=\""]
+                  (-> (.styles t)
+                      (reduce [] (fn [v styling]
+                                   (conj v (html styling))))
+                      (interpose ";\n")
+                      vec
+                      (conj "\""))))))

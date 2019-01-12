@@ -1,0 +1,299 @@
+
+(add-ns st (git-dependency "https://github.com/Toccata-Lang/stream.git"
+                           "stream.toc"
+                           :sha "af43750"))
+(add-ns fio (git-dependency "https://github.com/Toccata-Lang/file-io.git"
+                            "file-io.toc"
+                            :sha "08058d6"))
+
+(def out-strm fio/stdout)
+
+(defprotocol StringWriter
+  (write-str [x]
+    (out-strm (str x))))
+
+(extend-type Vector
+  StringWriter
+  (write-str [v]
+    (map v (fn [x]
+             (write-str x)))))
+
+(extend-type List
+  StringWriter
+  (write-str [l]
+    (map l (fn [x]
+             (write-str x)))))
+
+(defn css-enum [t-name & types]
+  (let [types (comp types ['initial 'inherit 'unset 'revert 'none])]
+    (write-str ["(def " t-name " (enum " (interpose types " ") "))\n\n"])
+    t-name))
+
+(defn css-comp [t-name & types]
+  (let [types (conj types 'Global)]
+    (write-str ["(def " t-name " (comp " (interpose types " ") "))\n\n"])
+    t-name))
+
+(def write-imports
+  (write-str ["(add-ns d (module \"document.toc\"))\n"
+              "(add-ns t (module \"tag.toc\"))\n"
+              "\n"]))
+
+(def values ['row 'column 'cover 'flex 'flex-begin 'center 'space-between 'block
+             'fixed 'relative 'auto 'normal 'none 'disc 'circle 'square 'decimal 'lower-roman
+             'static 'absolute 'sticky 'local 'contain 'visible 'inline-start 'inline-end
+             'upper-roman 'lower-alpha 'lower-latin 'upper-alpha 'upper-latin 'solid 'hidden
+             'dotted 'dashed 'double 'groove 'ridge 'inset 'outset 'scroll 'outside 'inside
+             'revert 'initial 'inherit 'unset 'content-box 'border-box 'list-item 'bold
+             'xx-small 'x-small 'small 'medium 'large 'x-large 'xx-large 'smaller 'larger
+             'serif 'sans-serif 'monospace 'cursive 'fantasy 'system-ui 'lighter 'bolder
+             'flow 'table 'grid 'inline 'run-in 'ruby 'row-reverse 'column-reverse 'nowrap
+             'wrap-reverse 'unsafe 'safe 'start 'end 'flex-start 'flex-end 'space-around
+             'space-evenly 'stretch 'match-parent 'justify 'justify-all 'self-start 'self-end
+             'fill-available 'fit-content 'min-content 'max-content 'thick 'thin
+             ])
+
+(def write-values
+  (write-str [";; CSS values\n"
+              (map values (fn [v]
+                            ["(def " (str v) "\n  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] [\"" (str v) "\"])))\n"]))
+              "
+(def css-wrap
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] [\"wrap\"])))\n\n
+(def nbsp
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] [\"&nbsp;\"])))\n\n"]))
+
+(def Global (css-enum 'Global 'initial 'inherit 'unset 'revert 'none))
+
+(def Auto (css-enum 'Auto 'auto))
+
+(def lengths {'px 'px
+              'pt 'pt})
+
+(def write-lengths
+  (write-str [";; CSS Lengths\n\n"
+              (map (seq lengths) (fn [[k v]]
+                                   [
+"(deftype " k " [size]
+  (assert (instance? Integer size))
+  d/DocElement
+  (d/css [_ classes] classes)
+  (d/html [_] [(str size \"" v "\")]))\n\n"]))
+
+"(deftype percent [size]
+  (assert (instance? Integer size))
+  d/DocElement
+  (d/css [_ classes] classes)
+  (d/html [_] [(str size \"%\")]))\n\n"]))
+
+(def SimpleLength (apply css-comp (cons 'SimpleLength (comp (keys lengths)
+                                                            ;; TODO: remove when floats work
+                                                            (list 'String)))))
+
+(def Length (apply css-comp (cons 'Length (comp (keys lengths)
+                                                ;; TODO: remove when floats work
+                                                (list 'percent 'String)))))
+
+(def color-names ['buttonface 'black 'silver 'gray 'white 'maroon 'red 'purple 'fuchsia 'green
+                  'lime 'olive 'yellow 'navy 'blue 'teal 'aqua 'orange 'aliceblue 'antiquewhite
+                  'aquamarine 'azure 'beige 'bisque 'blanchedalmond 'blueviolet 'brown 'burlywood
+                  'cadetblue 'chartreuse 'chocolate 'coral 'cornflowerblue 'cornsilk 'crimson
+                  'cyan 'darkblue 'darkcyan 'darkgoldenrod 'darkgray 'darkgreen 'darkgrey 'darkkhaki
+                  'darkmagenta 'darkolivegreen 'darkorange 'darkorchid 'darkred 'darksalmon 'darkseagreen
+                  'darkslateblue 'darkslategray 'darkslategrey 'darkturquoise 'darkviolet 'deeppink
+                  'deepskyblue 'dimgray 'dimgrey 'dodgerblue 'firebrick 'floralwhite 'forestgreen
+                  'gainsboro 'ghostwhite 'gold 'goldenrod 'greenyellow 'grey 'honeydew 'hotpink
+                  'indianred 'indigo 'ivory 'khaki 'lavender 'lavenderblush 'lawngreen 'lemonchiffon
+                  'lightblue 'lightcoral 'lightcyan 'lightgoldenrodyellow 'lightgray 'lightgreen
+                  'lightgrey 'lightpink 'lightsalmon 'lightseagreen 'lightskyblue 'lightslategray
+                  'lightslategrey 'lightsteelblue 'lightyellow 'limegreen 'linen 'magenta 'mediumaquamarine
+                  'mediumblue 'mediumorchid 'mediumpurple 'mediumseagreen 'mediumslateblue
+                  'mediumspringgreen 'mediumturquoise 'mediumvioletred 'midnightblue 'mintcream
+                  'mistyrose 'moccasin 'navajowhite 'oldlace 'olivedrab 'orangered 'orchid 'palegoldenrod
+                  'palegreen 'paleturquoise 'palevioletred 'papayawhip 'peachpuff 'peru 'pink 'plum
+                  'powderblue 'rosybrown 'royalblue 'saddlebrown 'salmon 'sandybrown 'seagreen 'seashell
+                  'sienna 'skyblue 'slateblue 'slategray 'slategrey 'snow 'springgreen 'steelblue 'tan
+                  'thistle 'tomato 'turquoise 'violet 'wheat 'whitesmoke 'yellowgreen 'rebeccapurple])
+
+(def write-colors
+  (write-str [";; Named colors
+(deftype NamedColor [color]
+  d/DocElement
+  (d/css [_ classes] classes)
+  (d/html [_] [color]))\n\n"
+              (map color-names (fn [c]
+                                 ["(def " c " (NamedColor \"" c "\"))\n"]))
+              "\n\n"
+              "(deftype HexColor [color]
+  d/DocElement
+  (d/html [_] [(str \"#\" color)]))
+
+(defn hex-color [s] "
+              ;; TODO: validate color string to only contain hex digits
+              "(HexColor s))\n\n"]))
+
+(def ColorValue (css-comp 'ColorValue 'HexColor 'NamedColor))
+
+(def style-types ['top 'left 'right 'bottom])
+
+(def write-style-types
+  (write-str [";; Some types are also style attributes\n\n"
+              (map style-types (fn [v] [ "(def " v " (reify
+           Function
+           (invoke [_ element value]
+             (assert (instance? Length value))
+             (t/add-style element \"" v "\" value))
+
+           d/DocElement
+           (d/css [_ classes] classes)
+           (d/html [_] [\"" v "\"])))
+"]))]))
+
+(defn attr-args [type-names]
+  (reduce (zip-lists type-names
+                     (range (count type-names)))
+          {} (fn [m [t-name idx]]
+               (assoc m (str "arg" idx) t-name))))
+
+(defn attr-arity [attr type-names]
+  (let [args (attr-args type-names)]
+    ["[element " (interpose (keys args) " ") "]\n"
+     (map (seq args) (fn [[arg t-name]]
+                       ["(assert (instance? " t-name " " arg "))\n"]))
+    "(t/add-style element \"" attr "\" [" (interpose (keys args) " ") "])"]))
+
+(defn css-attr [attr & arities]
+  (either (or (and (every arities (partial instance? Symbol))
+                   (maybe (css-attr attr arities)))
+              (and (= 1 (count arities))
+                   (map (first arities) (fn [type-names]
+                                          (write-str ["(defn " attr " "
+                                                      (attr-arity attr type-names) ")\n\n"])))))
+          (write-str ["(defn " attr "\n"
+                      (interpose (map arities (fn [type-names]
+                                                ["(" (attr-arity attr type-names) ")"]))
+                                 "\n")
+                      ")\n\n"])))
+
+(def MarginValue (css-comp 'MarginValue Auto Length 'String))
+(def Normal (css-enum 'Normal 'normal))
+(def Number (css-comp 'Number 'Integer))
+(def LineHeight (css-comp 'LineHeight Normal Length 'Integer))
+(def LengthNormal (css-comp 'LengthNormal Normal SimpleLength))
+(def GenericFont (css-enum 'GenericFont 'serif 'sans-serif 'monospace 'cursive 'fantasy 'system-ui))
+(def FontFamily (css-comp 'FontFamily GenericFont 'String))
+(def FontSizes (css-enum 'FontSizes 'xx-small 'x-small 'small 'medium 'large 'x-large 'xx-large 'smaller 'larger))
+(def FontSize (css-comp 'FontSize Length FontSizes))
+(def Boldness (css-enum 'Boldness 'normal 'bold 'lighter 'bolder))
+(def FontWeight (css-comp 'FontWeight Boldness 'Integer))
+(def Position (css-enum 'Positions 'static 'relative 'absolute 'fixed 'sticky))
+(def Attachments (css-enum 'Attachments 'scroll 'fixed 'local))
+(def Coverage (css-enum 'Coverage 'contain 'cover))
+(def BkgCoverage (css-comp 'BkgCoverage Coverage Length))
+(def Overflow (css-enum 'Overflow 'visible 'hidden 'scroll 'auto))
+(def BoxSizing (css-enum 'BoxSizing 'content-box 'border-box))
+(def CardinalDirs (css-enum 'CardinalDirs 'top 'bottom 'left 'right 'center))
+(def BkgPosition (css-comp 'BkgPosition CardinalDirs Length))
+(def Float (css-enum 'Float 'left 'right 'inline-start 'inline-end))
+(def Display (css-enum 'Display 'flex 'block 'flow 'table 'grid 'inline 'run-in 'ruby))
+(def FlexDir (css-enum 'FlexDir 'row 'column 'row-reverse 'column-reverse))
+(def FlexWrap (css-enum 'FlexWrap 'css-wrap 'nowrap 'wrap-reverse))
+(def Justify (css-enum 'Justify 'center 'start 'end 'flex-start 'flex-end 'left 'right 'normal
+                       'space-between 'space-around 'space-evenly 'stretch))
+(def Safety (css-enum 'Safety 'safe 'unsafe))
+(def TextAlignment (css-enum 'TextAlignment 'left 'right 'center 'justify 'justify-all 'start 'end 'match-parent))
+(def ItemAlignment (css-enum 'ItemAlignment 'normal 'stretch 'center 'start 'end 'flex-start 'flex-end
+                             'self-start 'self-end))
+(def ContentSize (css-enum 'max-content 'min-content 'fit-content 'fill-available))
+(def MinMaxContent (css-comp 'MinMaxContent ContentSize Length))
+(def BorderStyle (css-enum 'BorderStyle 'hidden 'dotted 'dashed 'solid 'double 'groove 'ridge 'inset 'outset))
+(def BorderWidths (css-enum 'BorderWidths 'thin 'medium 'thick))
+(def BorderWidth (css-comp 'BorderWidth BorderWidths Length))
+(def ListStyle (css-enum 'ListStyle 'disc 'circle 'square 'decimal 'lower-roman 'upper-roman 'lower-alpha
+                              'lower-latin 'upper-alpha 'upper-latin))
+(def ListPosition (css-enum 'inside 'outside))
+
+(main [_]
+  (write-str "\n")
+  (css-attr 'margin
+            [MarginValue]
+            [MarginValue MarginValue]
+            [MarginValue MarginValue MarginValue]
+            [MarginValue MarginValue MarginValue MarginValue])
+  (css-attr 'margin-top MarginValue)
+  (css-attr 'margin-left MarginValue)
+  (css-attr 'margin-right MarginValue)
+  (css-attr 'margin-right MarginValue)
+
+  (css-attr 'padding
+            [Length]
+            [Length Length]
+            [Length Length Length]
+            [Length Length Length Length])
+  (css-attr 'padding-top Length)
+  (css-attr 'padding-left Length)
+  (css-attr 'padding-right Length)
+  (css-attr 'padding-right Length)
+
+  (css-attr 'line-height LineHeight)
+  (css-attr 'z-index Number)
+  (css-attr 'box-shadow 'String)
+  (css-attr 'line-decoration 'String)
+  (css-attr 'text-decoration 'String)
+  (css-attr 'letter-spacing LengthNormal)
+  (css-attr 'font-family FontFamily)
+  (css-attr 'font-size FontSize)
+  (css-attr 'font-weight FontWeight)
+  (css-attr 'position Position)
+  (css-attr 'background-attachment Attachments)
+  (css-attr 'background-size
+            [BkgCoverage]
+            [BkgCoverage BkgCoverage])
+  (css-attr 'backgroundd-image 'String)
+  (css-attr 'backgroundd-color ColorValue)
+  (css-attr 'background-position
+            [BkgPosition]
+            [BkgPosition BkgPosition])
+  (css-attr 'overflow Overflow)
+  (css-attr 'box-sizing BoxSizing)
+  (css-attr 'width Length)
+  (css-attr 'height 'Length)
+  (css-attr 'color ColorValue)
+  (css-attr 'float Float)
+  (css-attr 'flex-direction FlexDir)
+  (css-attr 'flex-wrap FlexWrap)
+  (css-attr 'justify-content
+            [Justify]
+            [Safety Justify])
+  (css-attr 'text-align TextAlignment)
+  (css-attr 'align-items ItemAlignment)
+  (css-attr 'max-width MinMaxContent)
+  (css-attr 'min-width MinMaxContent)
+  (css-attr 'max-height MinMaxContent)
+  (css-attr 'min-height MinMaxContent)
+  (css-attr 'border-color ColorValue)
+  (css-attr 'border-style
+            [BorderStyle]
+            [BorderStyle BorderStyle]
+            [BorderStyle BorderStyle BorderStyle]
+            [BorderStyle BorderStyle BorderStyle BorderStyle])
+  (css-attr 'border-width
+            [BorderWidth]
+            [BorderWidth BorderWidth]
+            [BorderWidth BorderWidth BorderWidth]
+            [BorderWidth BorderWidth BorderWidth BorderWidth])
+  (css-attr 'border-radius
+            [Length]
+            [Length Length]
+            [Length Length Length]
+            [Length Length Length Length])
+  (css-attr 'list-style-type ListStyle)
+  (css-attr 'list-style-Position ListPosition)
+
+  (print-err 'done))

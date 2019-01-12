@@ -1,429 +1,6 @@
 
 (add-ns t (module "tag.toc"))
-
-(defprotocol PageElement
-  (html [_]
-    (assert-result x (instance? Vector x)))
-
-  (css [_ classes]
-    ;; TODO: find a way to change the 'HashMap' assertion to 't/Classes'
-    (assert (instance? HashMap classes))
-    (assert-result x (instance? HashMap x))))
-
-(defn flatten-all [coll]
-  (either (map (instance? Sequence coll)
-               (fn [coll]
-                 (flat-map coll flatten-all)))
-          (list coll)))
-
-(defn html-str [x]
-  (apply str (seq (flatten-all (html x)))))
-
-(extend-type Integer
-  PageElement
-  (css [_ classes]
-    classes)
-
-  (html [n]
-    [(str n)]))
-
-(extend-type Symbol
-  PageElement
-  (css [_ classes]
-    classes)
-
-  (html [s]
-    [(str s)]))
-
-(extend-type String
-  PageElement
-  (css [_ classes]
-    classes)
-
-  (html [s]
-    [s]))
-
-(extend-type HashMap
-  PageElement
-  (html [m]
-    (-> m
-        seq
-        (map (fn [[k v]]
-               [(str k "=\"" v "\"")]))
-        (interpose "\n")
-        vec)))
-
-(extend-type List
-  PageElement
-  (html [l]
-    (reduce l [] (fn [v x]
-                   (conj v (html x)))))
-  (css [l classes]
-    (reduce l classes (fn [classes x]
-                        (css x classes)))))
-
-(extend-type Vector
-  PageElement
-  (html [v]
-    (map v html))
-  (css [v classes]
-    (reduce v classes (fn [classes x]
-                        (css x classes)))))
-
-;; values that are also types
-(def row (reify PageElement (html [_] ["row"])))
-(def column (reify PageElement (html [_] ["column"])))
-(def cover (reify PageElement (html [_] ["cover"])))
-(def flex (reify PageElement (html [_] ["flex"])))
-(def flex-begin (reify PageElement (html [_] ["flex-begin"])))
-(def flex-end (reify PageElement (html [_] ["flex-end"])))
-(def center (reify PageElement (html [_] ["center"])))
-(def space-between (reify PageElement (html [_] ["space-between"])))
-(def block (reify PageElement (html [_] ["block"])))
-(def fixed (reify PageElement (html [_] ["fixed"])))
-(def relative (reify PageElement (html [_] ["relative"])))
-(def auto (reify PageElement (html [_] ["auto"])))
-(def normal (reify PageElement (html [_] ["normal"])))
-(def none (reify PageElement (html [_] ["none"])))
-(def disc (reify PageElement (html [_] ["disc"])))
-(def circle (reify PageElement (html [_] ["circle"])))
-(def square (reify PageElement (html [_] ["square"])))
-(def decimal (reify PageElement (html [_] ["decimal"])))
-(def lower-roman (reify PageElement (html [_] ["lower-roman"])))
-(def upper-roman (reify PageElement (html [_] ["upper-roman"])))
-(def lower-alpha (reify PageElement (html [_] ["lower-alpha"])))
-(def lower-latin (reify PageElement (html [_] ["lower-latin"])))
-(def upper-alpha (reify PageElement (html [_] ["upper-alpha"])))
-(def upper-latin (reify PageElement (html [_] ["upper-latin"])))
-(def solid (reify PageElement (html [_] ["solid"])))
-(def hidden (reify PageElement (html [_] ["hidden"])))
-(def dotted (reify PageElement (html [_] ["dotted"])))
-(def dashed (reify PageElement (html [_] ["dashed"])))
-(def double (reify PageElement (html [_] ["double"])))
-(def groove (reify PageElement (html [_] ["groove"])))
-(def ridge (reify PageElement (html [_] ["ridge"])))
-(def inset (reify PageElement (html [_] ["inset"])))
-(def outset (reify PageElement (html [_] ["outset"])))
-(def scroll (reify PageElement (html [_] ["scroll"])))
-(def outside (reify PageElement (html [_] ["outside"])))
-(def inside (reify PageElement (html [_] ["inside"])))
-(def initial (reify PageElement (html [_] ["initial"])))
-(def inherit (reify PageElement (html [_] ["inherit"])))
-(def unset (reify PageElement (html [_] ["unset"])))
-(def content-box (reify PageElement (html [_] ["content-box"])))
-(def border-box (reify PageElement (html [_] ["border-box"])))
-(def list-item (reify PageElement (html [_] ["list-item"])))
-(def bold (reify PageElement (html [_] ["bold"])))
-
-(def nbsp (reify PageElement
-            (css [_ classes] classes)
-            (html [_] ["&nbsp;"])))
-
-(extend-type t/StyleAttribute
-  PageElement
-  (html [t]
-    [(.name t) ": " (vec (interpose (html (.value t)) " "))]))
-
-(extend-type t/Styling
-  PageElement
-  (html [t]
-    (either (empty? (.styles t))
-            (comp ["style=\""]
-                  (-> (.styles t)
-                      (reduce [] (fn [v styling]
-                                   (conj v (html styling))))
-                      (interpose ";\n")
-                      vec
-                      (conj "\""))))))
-
-(def empty-style (t/Styling []))
-
-(extend-type t/Class
-  Stringable
-  (string-list [class]
-    (list "<CSS-Class " (.name class) ">"))
-
-  PageElement
-  (html [class]
-    (either (empty? (.styles (.styling class)))
-            [(.name class) "{\n"
-             (-> (.styling class)
-                 .styles
-                 (map html)
-                 (interpose ";\n")
-                 vec)
-             "}\n\n"]))
-
-  (css [class classes]
-    (assoc classes (.name class) class)))
-
-(extend-type t/Classes
-  PageElement
-  (html [t]
-    (either (and (empty? (.classes t))
-                 (maybe []))
-            (comp ["class=\""]
-                  (conj (-> (.classes t)
-                            keys
-                            (interpose " ")
-                            vec)
-                        "\""))))
-
-  (css [t classes-map]
-    ;; TODO: make this a call to comp, maybe
-    (reduce (vals (.classes t)) classes-map (fn [m class]
-                                              (css class m)))))
-
-(extend-type t/Tag
-  PageElement
-  (html [t]
-    ["\n<" (.name t) " "
-     (-> [(html (.class t))
-          (html (.attributes t))
-          (html (.styling t))]
-         (remove empty?)
-         (interpose "\n")
-         vec)
-     (either (and (empty? (.contents t))
-                  (maybe "/>"))
-             [">" (html (.contents t)) "\n</" (.name t) ">"])])
-
-  (css [t classes]
-    (css (.contents t) (css (.class t) classes))))
-
-
-(deftype pt [size]
-  (assert (instance? Integer size))
-
-  PageElement
-  (html [_] [(str size "pt")]))
-
-(deftype px [size]
-  (assert (instance? Integer size))
-
-  PageElement
-  (html [_] [(str size "px")]))
-
-(deftype percent [size]
-  (assert (instance? Integer size))
-
-  PageElement
-  (html [_] [(str size "%")]))
-
-(def Length (comp px
-                  pt
-                  percent
-                  ;; TODO: remove when floats work
-                  String ;; So we can specify "em" lengths which are usually floats
-                  ))
-
-(deftype NamedColor [color]
-  PageElement
-  (html [_] [color]))
-
-;; The named colors of CSS
-(def buttonface (NamedColor "buttonface"))
-(def black (NamedColor "black"))
-(def silver (NamedColor "silver"))
-(def gray (NamedColor "gray"))
-(def white (NamedColor "white"))
-(def maroon (NamedColor "maroon"))
-(def red (NamedColor "red"))
-(def purple (NamedColor "purple"))
-(def fuchsia (NamedColor "fuchsia"))
-(def green (NamedColor "green"))
-(def lime (NamedColor "lime"))
-(def olive (NamedColor "olive"))
-(def yellow (NamedColor "yellow"))
-(def navy (NamedColor "navy"))
-(def blue (NamedColor "blue"))
-(def teal (NamedColor "teal"))
-(def aqua (NamedColor "aqua"))
-(def orange (NamedColor "orange"))
-(def aliceblue (NamedColor "aliceblue"))
-(def antiquewhite (NamedColor "antiquewhite"))
-(def aquamarine (NamedColor "aquamarine"))
-(def azure (NamedColor "azure"))
-(def beige (NamedColor "beige"))
-(def bisque (NamedColor "bisque"))
-(def blanchedalmond (NamedColor "blanchedalmond"))
-(def blueviolet (NamedColor "blueviolet"))
-(def brown (NamedColor "brown"))
-(def burlywood (NamedColor "burlywood"))
-(def cadetblue (NamedColor "cadetblue"))
-(def chartreuse (NamedColor "chartreuse"))
-(def chocolate (NamedColor "chocolate"))
-(def coral (NamedColor "coral"))
-(def cornflowerblue (NamedColor "cornflowerblue"))
-(def cornsilk (NamedColor "cornsilk"))
-(def crimson (NamedColor "crimson"))
-(def cyan (NamedColor "cyan"))
-(def darkblue (NamedColor "darkblue"))
-(def darkcyan (NamedColor "darkcyan"))
-(def darkgoldenrod (NamedColor "darkgoldenrod"))
-(def darkgray (NamedColor "darkgray"))
-(def darkgreen (NamedColor "darkgreen"))
-(def darkgrey (NamedColor "darkgrey"))
-(def darkkhaki (NamedColor "darkkhaki"))
-(def darkmagenta (NamedColor "darkmagenta"))
-(def darkolivegreen (NamedColor "darkolivegreen"))
-(def darkorange (NamedColor "darkorange"))
-(def darkorchid (NamedColor "darkorchid"))
-(def darkred (NamedColor "darkred"))
-(def darksalmon (NamedColor "darksalmon"))
-(def darkseagreen (NamedColor "darkseagreen"))
-(def darkslateblue (NamedColor "darkslateblue"))
-(def darkslategray (NamedColor "darkslategray"))
-(def darkslategrey (NamedColor "darkslategrey"))
-(def darkturquoise (NamedColor "darkturquoise"))
-(def darkviolet (NamedColor "darkviolet"))
-(def deeppink (NamedColor "deeppink"))
-(def deepskyblue (NamedColor "deepskyblue"))
-(def dimgray (NamedColor "dimgray"))
-(def dimgrey (NamedColor "dimgrey"))
-(def dodgerblue (NamedColor "dodgerblue"))
-(def firebrick (NamedColor "firebrick"))
-(def floralwhite (NamedColor "floralwhite"))
-(def forestgreen (NamedColor "forestgreen"))
-(def gainsboro (NamedColor "gainsboro"))
-(def ghostwhite (NamedColor "ghostwhite"))
-(def gold (NamedColor "gold"))
-(def goldenrod (NamedColor "goldenrod"))
-(def greenyellow (NamedColor "greenyellow"))
-(def grey (NamedColor "grey"))
-(def honeydew (NamedColor "honeydew"))
-(def hotpink (NamedColor "hotpink"))
-(def indianred (NamedColor "indianred"))
-(def indigo (NamedColor "indigo"))
-(def ivory (NamedColor "ivory"))
-(def khaki (NamedColor "khaki"))
-(def lavender (NamedColor "lavender"))
-(def lavenderblush (NamedColor "lavenderblush"))
-(def lawngreen (NamedColor "lawngreen"))
-(def lemonchiffon (NamedColor "lemonchiffon"))
-(def lightblue (NamedColor "lightblue"))
-(def lightcoral (NamedColor "lightcoral"))
-(def lightcyan (NamedColor "lightcyan"))
-(def lightgoldenrodyellow (NamedColor "lightgoldenrodyellow"))
-(def lightgray (NamedColor "lightgray"))
-(def lightgreen (NamedColor "lightgreen"))
-(def lightgrey (NamedColor "lightgrey"))
-(def lightpink (NamedColor "lightpink"))
-(def lightsalmon (NamedColor "lightsalmon"))
-(def lightseagreen (NamedColor "lightseagreen"))
-(def lightskyblue (NamedColor "lightskyblue"))
-(def lightslategray (NamedColor "lightslategray"))
-(def lightslategrey (NamedColor "lightslategrey"))
-(def lightsteelblue (NamedColor "lightsteelblue"))
-(def lightyellow (NamedColor "lightyellow"))
-(def limegreen (NamedColor "limegreen"))
-(def linen (NamedColor "linen"))
-(def magenta (NamedColor "magenta"))
-(def mediumaquamarine (NamedColor "mediumaquamarine"))
-(def mediumblue (NamedColor "mediumblue"))
-(def mediumorchid (NamedColor "mediumorchid"))
-(def mediumpurple (NamedColor "mediumpurple"))
-(def mediumseagreen (NamedColor "mediumseagreen"))
-(def mediumslateblue (NamedColor "mediumslateblue"))
-(def mediumspringgreen (NamedColor "mediumspringgreen"))
-(def mediumturquoise (NamedColor "mediumturquoise"))
-(def mediumvioletred (NamedColor "mediumvioletred"))
-(def midnightblue (NamedColor "midnightblue"))
-(def mintcream (NamedColor "mintcream"))
-(def mistyrose (NamedColor "mistyrose"))
-(def moccasin (NamedColor "moccasin"))
-(def navajowhite (NamedColor "navajowhite"))
-(def oldlace (NamedColor "oldlace"))
-(def olivedrab (NamedColor "olivedrab"))
-(def orangered (NamedColor "orangered"))
-(def orchid (NamedColor "orchid"))
-(def palegoldenrod (NamedColor "palegoldenrod"))
-(def palegreen (NamedColor "palegreen"))
-(def paleturquoise (NamedColor "paleturquoise"))
-(def palevioletred (NamedColor "palevioletred"))
-(def papayawhip (NamedColor "papayawhip"))
-(def peachpuff (NamedColor "peachpuff"))
-(def peru (NamedColor "peru"))
-(def pink (NamedColor "pink"))
-(def plum (NamedColor "plum"))
-(def powderblue (NamedColor "powderblue"))
-(def rosybrown (NamedColor "rosybrown"))
-(def royalblue (NamedColor "royalblue"))
-(def saddlebrown (NamedColor "saddlebrown"))
-(def salmon (NamedColor "salmon"))
-(def sandybrown (NamedColor "sandybrown"))
-(def seagreen (NamedColor "seagreen"))
-(def seashell (NamedColor "seashell"))
-(def sienna (NamedColor "sienna"))
-(def skyblue (NamedColor "skyblue"))
-(def slateblue (NamedColor "slateblue"))
-(def slategray (NamedColor "slategray"))
-(def slategrey (NamedColor "slategrey"))
-(def snow (NamedColor "snow"))
-(def springgreen (NamedColor "springgreen"))
-(def steelblue (NamedColor "steelblue"))
-(def tan (NamedColor "tan"))
-(def thistle (NamedColor "thistle"))
-(def tomato (NamedColor "tomato"))
-(def turquoise (NamedColor "turquoise"))
-(def violet (NamedColor "violet"))
-(def wheat (NamedColor "wheat"))
-(def whitesmoke (NamedColor "whitesmoke"))
-(def yellowgreen (NamedColor "yellowgreen"))
-(def rebeccapurple (NamedColor "rebeccapurple"))
-
-(deftype HexColor [color]
-  PageElement
-  (html [_] [(str "#" color)]))
-
-(defn hex-color [s]
-  ;; TODO: validate color string to only contain hex digits
-  (HexColor s))
-
-(def Global (enum initial inherit unset))
-
-(def ColorValue (comp HexColor
-                      NamedColor
-                      Global))
-
-;; Some types are also style attributes
-(def top (reify
-           Function
-           (invoke [_ element value]
-             (assert (instance? Length value))
-             (t/add-style element "top" value))
-
-           PageElement
-           (html [_] ["top"])))
-
-(def left (reify
-            Function
-            (invoke [_ element value]
-              (assert (instance? Length value))
-              (t/add-style element "left" value))
-
-            PageElement
-            (html [_] ["left"])))
-
-(def right (reify
-             Function
-             (invoke [_ element value]
-               (assert (instance? Length value))
-               (t/add-style element "left" value))
-
-             PageElement
-             (html [_] ["right"])))
-
-(def bottom (reify
-              Function
-              (invoke [_ element value]
-                (assert (instance? Length value))
-                (t/add-style element "left" value))
-
-              PageElement
-              (html [_] ["bottom"])))
-
-(def Auto (enum auto))
+(add-ns d (module "document.toc"))
 
 (def MarginValue (comp Auto
                        Length
@@ -793,20 +370,20 @@
     (t/add-style (span s) attr-name value)))
 
 (deftype HTMLPage [head body]
-  PageElement
-  (html [_]
+  d/DocElement
+  (d/html [_]
     ["<!DOCTYPE html>\n"
      "<html>\n"
-     (html head)
-     (html body)
+     (d/html head)
+     (d/html body)
      "</html>"]))
 
 (defn node-types-css [& type-classes]
   (reify
-    PageElement
-    (html [_]
+    d/DocElement
+    (d/html [_]
       ["\n<style type=\"text/css\">\n"
-       (map type-classes html)
+       (map type-classes d/html)
        "</style>"])))
 
 (deftype Any [styling])
@@ -827,37 +404,37 @@
 (deftype MediaQuery [styling classes]
   (assert (instance? t/Styling styling))
 
-  PageElement
-  (html [_]
+  d/DocElement
+  (d/html [_]
     ["\n@media ("
      (-> styling
          .styles
          (reduce [] (fn [v styling]
-                      (conj v (html styling))))
+                      (conj v (d/html styling))))
          (interpose "\n")
          vec)
      ") {"
      (-> classes
          (map (fn [class]
-                  ["." (html class)]))
+                  ["." (d/html class)]))
          (interpose "\n")
          vec)
      "}"]))
 
 (defn media [& classes]
-  (MediaQuery empty-style classes))
+  (MediaQuery t/empty-style classes))
 
 (defn classes-css [contents]
   (reify
-    PageElement
-    (html [_]
+    d/DocElement
+    (d/html [_]
       ["\n<style type=\"text/css\">\n"
        (-> contents
-           (css {})
+           (d/css {})
            vals
            vec
            (map (fn [class]
                   (assert (instance? Class class))
                   (either (empty? (.styles (.styling class)))
-                          ["." (html class)]))))
+                          ["." (d/html class)]))))
        "</style>"])))
