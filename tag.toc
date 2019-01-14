@@ -1,4 +1,6 @@
 
+(deftype DummyTag [styling class])
+
 (deftype StyleAttribute [name value])
 
 (defprotocol Stylings
@@ -47,23 +49,7 @@
 
   Stringable
   (string-list [_]
-    (list "<Tag " (str name) ">"))
-
-  DocElement
-  (html [t]
-    ["\n<" (.name t) " "
-     (-> [(html (.class t))
-          (html (.attributes t))
-          (html (.styling t))]
-         (remove empty?)
-         (interpose "\n")
-         vec)
-     (either (and (empty? (.contents t))
-                  (maybe "/>"))
-             [">" (html (.contents t)) "\n</" (.name t) ">"])])
-
-  (css [t classes]
-    (css (.contents t) (css (.class t) classes))))
+    (list "<Tag " (str name) ">")))
 
 (def empty-class (Classes {}))
 (def empty-style (Styling []))

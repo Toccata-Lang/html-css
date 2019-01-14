@@ -63,17 +63,15 @@
 (def css-wrap
   (reify d/DocElement
     (d/css [_ classes] classes)
-    (d/html [_] [\"wrap\"])))\n\n
-(def nbsp
-  (reify d/DocElement
-    (d/css [_ classes] classes)
-    (d/html [_] [\"&nbsp;\"])))\n\n"]))
+    (d/html [_] [\"wrap\"])))\n\n"]))
 
 (def Global (css-enum 'Global 'initial 'inherit 'unset 'revert 'none))
 
 (def Auto (css-enum 'Auto 'auto))
 
 (def lengths {'px 'px
+              'vh 'vh
+              'vw 'vw
               'pt 'pt})
 
 (def write-lengths
@@ -295,5 +293,10 @@
             [Length Length Length Length])
   (css-attr 'list-style-type ListStyle)
   (css-attr 'list-style-Position ListPosition)
+  (css-attr 'stroke ColorValue)
+  (css-attr 'stroke-width Length)
+  (css-attr 'fill ColorValue)
+  (css-attr 'fill-opacity 'Integer)
+  (css-attr 'display Display)
 
   (print-err 'done))

@@ -107,7 +107,7 @@
   (html [t]
     [(.name t) ": " (vec (interpose (html (.value t)) " "))]))
 
-(extend-type Styling
+(extend-type t/Styling
   DocElement
   (html [t]
     (either (empty? (.styles t))

@@ -400,17 +400,23 @@
     (d/css [_ classes] classes)
     (d/html [_] ["wrap"])))
 
-
-(def nbsp
-  (reify d/DocElement
-    (d/css [_ classes] classes)
-    (d/html [_] ["&nbsp;"])))
-
 (def Global (enum initial inherit unset revert none initial inherit unset revert none))
 
 (def Auto (enum auto initial inherit unset revert none))
 
 ;; CSS Lengths
+
+(deftype vh [size]
+  (assert (instance? Integer size))
+  d/DocElement
+  (d/css [_ classes] classes)
+  (d/html [_] [(str size "vh")]))
+
+(deftype vw [size]
+  (assert (instance? Integer size))
+  d/DocElement
+  (d/css [_ classes] classes)
+  (d/html [_] [(str size "vw")]))
 
 (deftype px [size]
   (assert (instance? Integer size))
@@ -430,9 +436,9 @@
   (d/css [_ classes] classes)
   (d/html [_] [(str size "%")]))
 
-(def SimpleLength (comp Global px pt String))
+(def SimpleLength (comp Global vh vw px pt String))
 
-(def Length (comp Global px pt percent String))
+(def Length (comp Global vh vw px pt percent String))
 
 ;; Named colors
 (deftype NamedColor [color]
@@ -984,4 +990,24 @@
 (defn list-style-Position [element arg0]
 (assert (instance? inside arg0))
 (t/add-style element "list-style-Position" [arg0]))
+
+(defn stroke [element arg0]
+(assert (instance? ColorValue arg0))
+(t/add-style element "stroke" [arg0]))
+
+(defn stroke-width [element arg0]
+(assert (instance? Length arg0))
+(t/add-style element "stroke-width" [arg0]))
+
+(defn fill [element arg0]
+(assert (instance? ColorValue arg0))
+(t/add-style element "fill" [arg0]))
+
+(defn fill-opacity [element arg0]
+(assert (instance? Integer arg0))
+(t/add-style element "fill-opacity" [arg0]))
+
+(defn display [element arg0]
+(assert (instance? Display arg0))
+(t/add-style element "display" [arg0]))
 

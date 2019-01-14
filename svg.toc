@@ -1,0 +1,42 @@
+
+(add-ns t (module "tag.toc"))
+(add-ns d (module "document.toc"))
+
+(deftype SVGTag [name namespace contents styling attributes class]
+  (assert (instance? t/Classes class))
+  (assert (instance? t/Styling styling))
+
+  Stringable
+  (string-list [_]
+    (list "<SVGTag " (str name) ">"))
+
+  d/DocElement
+  (d/html [t]
+    ["\n<" (.name t) " "
+     (-> [(d/html (.class t))
+          (d/html (.attributes t))
+          (d/html (.styling t))]
+         (remove empty?)
+         (interpose "\n")
+         vec)
+     (either (and (empty? (.contents t))
+                  (maybe "/>"))
+             [">" (d/html (.contents t)) "\n</" (.name t) ">"])])
+
+  (d/css [t classes]
+    (d/css (.contents t) (d/css (.class t) classes))))
+
+(defn svg-tag [name]
+  (fn tag-constructor
+    ([]
+     (SVGTag name "http://www.w3.org/2000/svg" [] t/empty-style {} t/empty-class))
+    ([attr-or-tag & contents]
+     (let [contents (either (and (instance? HashMap attr-or-tag)
+                                 (maybe contents))
+                            (cons attr-or-tag contents))]
+       (SVGTag name "http://www.w3.org/2000/svg" (vec contents)
+               t/empty-style
+               (either (instance? HashMap attr-or-tag) {})
+               t/empty-class)))))
+
+(def circle (svg-tag "circle"))
