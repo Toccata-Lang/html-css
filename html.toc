@@ -2,37 +2,74 @@
 (add-ns t (module "tag.toc"))
 (add-ns d (module "document.toc"))
 
-(def head (t/tag "head"))
-(def body (t/tag "body"))
-(def style (t/tag "style"))
-(def script (t/tag "script"))
-(def a (t/tag "a"))
-(def div (t/tag "div"))
-(def p (t/tag "p"))
-(def span (t/tag "span"))
-(def article (t/tag "article"))
-(def aside (t/tag "aside"))
-(def details (t/tag "details"))
-(def footer (t/tag "footer"))
-(def header (t/tag "header"))
-(def hgroup (t/tag "hgroup"))
-(def menu (t/tag "menu"))
-(def nav (t/tag "nav"))
-(def section (t/tag "section"))
-(def ol (t/tag "ol"))
-(def ul (t/tag "ul"))
-(def li (t/tag "li"))
-(def link (t/tag "link"))
-(def title (t/tag "title"))
-(def meta (t/tag "meta"))
-(def img (t/tag "img"))
-(def h1 (t/tag "h1"))
-(def h2 (t/tag "h2"))
-(def h3 (t/tag "h3"))
-(def h4 (t/tag "h4"))
-(def h5 (t/tag "h5"))
-(def h6 (t/tag "h6"))
-(def button (t/tag "button"))
+(deftype HTMLTag [name contents styling attributes class]
+  (assert (instance? t/Classes class))
+  (assert (instance? t/Styling styling))
+
+  Stringable
+  (string-list [_]
+    (list "<Tag " (str name) ">"))
+
+  DocElement
+  (html [t]
+    ["\n<" (.name t) " "
+     (-> [(html (.class t))
+          (html (.attributes t))
+          (html (.styling t))]
+         (remove empty?)
+         (interpose "\n")
+         vec)
+     (either (and (empty? (.contents t))
+                  (maybe "/>"))
+             [">" (html (.contents t)) "\n</" (.name t) ">"])])
+
+  (css [t classes]
+    (css (.contents t) (css (.class t) classes))))
+
+(defn html-tag [name]
+  (fn tag-constructor
+    ([]
+     (Tag name [] empty-style {} empty-class))
+    ([attr-or-tag & contents]
+     (let [contents (either (and (instance? HashMap attr-or-tag)
+                                 (maybe contents))
+                            (cons attr-or-tag contents))]
+       (Tag name (vec contents)
+            empty-style
+            (either (instance? HashMap attr-or-tag) {})
+            empty-class)))))
+
+(def head (html-tag "head"))
+(def body (html-tag "body"))
+(def style (html-tag "style"))
+(def script (html-tag "script"))
+(def a (html-tag "a"))
+(def div (html-tag "div"))
+(def p (html-tag "p"))
+(def span (html-tag "span"))
+(def article (html-tag "article"))
+(def aside (html-tag "aside"))
+(def details (html-tag "details"))
+(def footer (html-tag "footer"))
+(def header (html-tag "header"))
+(def hgroup (html-tag "hgroup"))
+(def menu (html-tag "menu"))
+(def nav (html-tag "nav"))
+(def section (html-tag "section"))
+(def ol (html-tag "ol"))
+(def ul (html-tag "ul"))
+(def li (html-tag "li"))
+(def link (html-tag "link"))
+(def title (html-tag "title"))
+(def meta (html-tag "meta"))
+(def img (html-tag "img"))
+(def h1 (html-tag "h1"))
+(def h2 (html-tag "h2"))
+(def h3 (html-tag "h3"))
+(def h4 (html-tag "h4"))
+(def h5 (html-tag "h5"))
+(def h6 (html-tag "h6"))
+(def button (html-tag "button"))
 
 (extend-type String
   t/Stylings
@@ -41,13 +78,3 @@
 
   (t/add-style [s attr-name value]
     (t/add-style (span s) attr-name value)))
-
-(deftype HTMLPage [head body]
-  d/DocElement
-  (d/html [_]
-    ["<!DOCTYPE html>\n"
-     "<html>\n"
-     (d/html head)
-     (d/html body)
-     "</html>"]))
-

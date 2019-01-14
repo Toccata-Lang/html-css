@@ -102,23 +102,6 @@
     (reduce (vals (.classes t)) classes-map (fn [m class]
                                               (css class m)))))
 
-(extend-type t/Tag
-  DocElement
-  (html [t]
-    ["\n<" (.name t) " "
-     (-> [(html (.class t))
-          (html (.attributes t))
-          (html (.styling t))]
-         (remove empty?)
-         (interpose "\n")
-         vec)
-     (either (and (empty? (.contents t))
-                  (maybe "/>"))
-             [">" (html (.contents t)) "\n</" (.name t) ">"])])
-
-  (css [t classes]
-    (css (.contents t) (css (.class t) classes))))
-
 (extend-type t/StyleAttribute
   DocElement
   (html [t]
