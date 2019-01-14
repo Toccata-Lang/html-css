@@ -135,3 +135,73 @@
                       (interpose ";\n")
                       vec
                       (conj "\""))))))
+
+(deftype HTMLPage [head body]
+  DocElement
+  (html [_]
+    ["<!DOCTYPE html>\n"
+     "<html>\n"
+     (html head)
+     (html body)
+     "</html>"]))
+
+(defn node-types-css [& type-classes]
+  (reify
+    DocElement
+    (html [_]
+      ["\n<style type=\"text/css\">\n"
+       (map type-classes html)
+       "</style>"])))
+
+(deftype Any [styling])
+
+(defn any []
+  (Any []))
+
+(deftype All [styling])
+
+(def all
+  (All []))
+
+(deftype Not [styling])
+
+(defn not []
+  (Not []))
+
+(deftype MediaQuery [styling classes]
+  (assert (instance? t/Styling styling))
+
+  DocElement
+  (html [_]
+    ["\n@media ("
+     (-> styling
+         .styles
+         (reduce [] (fn [v styling]
+                      (conj v (html styling))))
+         (interpose "\n")
+         vec)
+     ") {"
+     (-> classes
+         (map (fn [class]
+                  ["." (html class)]))
+         (interpose "\n")
+         vec)
+     "}"]))
+
+(defn media [& classes]
+  (MediaQuery t/empty-style classes))
+
+(defn classes-css [contents]
+  (reify
+    DocElement
+    (html [_]
+      ["\n<style type=\"text/css\">\n"
+       (-> contents
+           (css {})
+           vals
+           vec
+           (map (fn [class]
+                  (assert (instance? Class class))
+                  (either (empty? (.styles (.styling class)))
+                          ["." (html class)]))))
+       "</style>"])))

@@ -1,0 +1,53 @@
+
+(add-ns t (module "tag.toc"))
+(add-ns d (module "document.toc"))
+
+(def head (t/tag "head"))
+(def body (t/tag "body"))
+(def style (t/tag "style"))
+(def script (t/tag "script"))
+(def a (t/tag "a"))
+(def div (t/tag "div"))
+(def p (t/tag "p"))
+(def span (t/tag "span"))
+(def article (t/tag "article"))
+(def aside (t/tag "aside"))
+(def details (t/tag "details"))
+(def footer (t/tag "footer"))
+(def header (t/tag "header"))
+(def hgroup (t/tag "hgroup"))
+(def menu (t/tag "menu"))
+(def nav (t/tag "nav"))
+(def section (t/tag "section"))
+(def ol (t/tag "ol"))
+(def ul (t/tag "ul"))
+(def li (t/tag "li"))
+(def link (t/tag "link"))
+(def title (t/tag "title"))
+(def meta (t/tag "meta"))
+(def img (t/tag "img"))
+(def h1 (t/tag "h1"))
+(def h2 (t/tag "h2"))
+(def h3 (t/tag "h3"))
+(def h4 (t/tag "h4"))
+(def h5 (t/tag "h5"))
+(def h6 (t/tag "h6"))
+(def button (t/tag "button"))
+
+(extend-type String
+  t/Stylings
+  (t/add-class [s class]
+    (t/add-class (span s) class))
+
+  (t/add-style [s attr-name value]
+    (t/add-style (span s) attr-name value)))
+
+(deftype HTMLPage [head body]
+  d/DocElement
+  (d/html [_]
+    ["<!DOCTYPE html>\n"
+     "<html>\n"
+     (d/html head)
+     (d/html body)
+     "</html>"]))
+
