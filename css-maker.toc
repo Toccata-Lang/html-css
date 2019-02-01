@@ -253,8 +253,8 @@
   (css-attr 'background-size
             [BkgCoverage]
             [BkgCoverage BkgCoverage])
-  (css-attr 'backgroundd-image 'String)
-  (css-attr 'backgroundd-color ColorValue)
+  (css-attr 'background-image 'String)
+  (css-attr 'background-color ColorValue)
   (css-attr 'background-position
             [BkgPosition]
             [BkgPosition BkgPosition])

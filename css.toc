@@ -837,13 +837,13 @@
 (assert (instance? BkgCoverage arg0))
 (t/add-style element "background-size" [arg1 arg0])))
 
-(defn backgroundd-image [element arg0]
+(defn background-image [element arg0]
 (assert (instance? String arg0))
-(t/add-style element "backgroundd-image" [arg0]))
+(t/add-style element "background-image" [arg0]))
 
-(defn backgroundd-color [element arg0]
+(defn background-color [element arg0]
 (assert (instance? ColorValue arg0))
-(t/add-style element "backgroundd-color" [arg0]))
+(t/add-style element "background-color" [arg0]))
 
 (defn background-position
 ([element arg0]
