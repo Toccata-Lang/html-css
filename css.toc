@@ -394,6 +394,18 @@
   (reify d/DocElement
     (d/css [_ classes] classes)
     (d/html [_] ["thin"])))
+(def underline
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["underline"])))
+(def overline
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["overline"])))
+(def line-through
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["line-through"])))
 
 (def css-wrap
   (reify d/DocElement
@@ -683,7 +695,7 @@
 
 (def Float (enum left right inline-start inline-end initial inherit unset revert none))
 
-(def Display (enum flex block flow table grid inline run-in ruby initial inherit unset revert none))
+(def Display (enum flex block flow table grid inline run-in ruby list-item initial inherit unset revert none))
 
 (def FlexDir (enum row column row-reverse column-reverse initial inherit unset revert none))
 
@@ -710,6 +722,10 @@
 (def ListStyle (enum disc circle square decimal lower-roman upper-roman lower-alpha lower-latin upper-alpha upper-latin initial inherit unset revert none))
 
 (def inside (enum outside initial inherit unset revert none))
+
+(def underline (enum overline line-through initial inherit unset revert none))
+
+(def TextDecorationLine (comp Global String underline))
 
 
 (defn margin
@@ -744,9 +760,9 @@
 (assert (instance? MarginValue arg0))
 (t/add-style element "margin-right" [arg0]))
 
-(defn margin-right [element arg0]
+(defn margin-bottom [element arg0]
 (assert (instance? MarginValue arg0))
-(t/add-style element "margin-right" [arg0]))
+(t/add-style element "margin-bottom" [arg0]))
 
 (defn padding
 ([element arg0]
@@ -796,13 +812,9 @@
 (assert (instance? String arg0))
 (t/add-style element "box-shadow" [arg0]))
 
-(defn line-decoration [element arg0]
-(assert (instance? String arg0))
-(t/add-style element "line-decoration" [arg0]))
-
-(defn text-decoration [element arg0]
-(assert (instance? String arg0))
-(t/add-style element "text-decoration" [arg0]))
+(defn text-decoration-line [element arg0]
+(assert (instance? TextDecorationLine arg0))
+(t/add-style element "text-decoration-line" [arg0]))
 
 (defn letter-spacing [element arg0]
 (assert (instance? LengthNormal arg0))
