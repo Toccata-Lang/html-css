@@ -418,18 +418,6 @@
 
 ;; CSS Lengths
 
-(deftype vh [size]
-  (assert (instance? Integer size))
-  d/DocElement
-  (d/css [_ classes] classes)
-  (d/html [_] [(str size "vh")]))
-
-(deftype vw [size]
-  (assert (instance? Integer size))
-  d/DocElement
-  (d/css [_ classes] classes)
-  (d/html [_] [(str size "vw")]))
-
 (deftype px [size]
   (assert (instance? Integer size))
   d/DocElement
@@ -442,15 +430,43 @@
   (d/css [_ classes] classes)
   (d/html [_] [(str size "pt")]))
 
+(deftype vh [size]
+  (assert (instance? Integer size))
+  d/DocElement
+  (d/css [_ classes] classes)
+  (d/html [_] [(str size "vh")]))
+
+(deftype vw [size]
+  (assert (instance? Integer size))
+  d/DocElement
+  (d/css [_ classes] classes)
+  (d/html [_] [(str size "vw")]))
+
+(deftype rem [size]
+  (assert (instance? Integer size))
+  d/DocElement
+  (d/css [_ classes] classes)
+  (d/html [_] [(str size "rem")]))
+
+(deftype em [size]
+  (assert (instance? Integer size))
+  d/DocElement
+  (d/css [_ classes] classes)
+  (d/html [_] [(str size "em")]))
+
 (deftype percent [size]
   (assert (instance? Integer size))
   d/DocElement
   (d/css [_ classes] classes)
   (d/html [_] [(str size "%")]))
 
-(def SimpleLength (comp Global vh vw px pt String))
+(def SimpleLength (comp Global px pt String))
 
-(def Length (comp Global vh vw px pt percent String))
+(def Length (comp Global px pt percent String))
+
+(def HeightLength (comp Global Length vh))
+
+(def WidthLength (comp Global Length vw))
 
 ;; Named colors
 (deftype NamedColor [color]
@@ -607,6 +623,7 @@
 (def whitesmoke (NamedColor "whitesmoke"))
 (def yellowgreen (NamedColor "yellowgreen"))
 (def rebeccapurple (NamedColor "rebeccapurple"))
+(def transparent (NamedColor "transparent"))
 
 
 (deftype HexColor [color]
@@ -615,47 +632,57 @@
 
 (defn hex-color [s] (HexColor s))
 
-(def ColorValue (comp Global HexColor NamedColor))
+(deftype rgba [arg0 arg1 arg2 arg3]
+(assert (instance? Integer arg0))
+(assert (instance? Integer arg1))
+(assert (instance? Integer arg2))
+(assert (instance? String arg3))
+
+d/DocElement
+(d/html [_]
+[(str "rgba(" arg0 "," arg1 "," arg2 "," arg3 ")")]))
+
+(def ColorValue (comp Global HexColor NamedColor rgba))
 
 ;; Some types are also style attributes
 
-(def top (reify
-           Function
-           (invoke [_ element value]
-             (assert (instance? Length value))
-             (t/add-style element "top" value))
-
-           d/DocElement
-           (d/css [_ classes] classes)
-           (d/html [_] ["top"])))
-(def left (reify
-           Function
-           (invoke [_ element value]
-             (assert (instance? Length value))
-             (t/add-style element "left" value))
-
-           d/DocElement
-           (d/css [_ classes] classes)
-           (d/html [_] ["left"])))
-(def right (reify
-           Function
-           (invoke [_ element value]
-             (assert (instance? Length value))
-             (t/add-style element "right" value))
-
-           d/DocElement
-           (d/css [_ classes] classes)
-           (d/html [_] ["right"])))
 (def bottom (reify
            Function
            (invoke [_ element value]
-             (assert (instance? Length value))
+             (assert (instance? HeightLength value))
              (t/add-style element "bottom" value))
 
            d/DocElement
            (d/css [_ classes] classes)
            (d/html [_] ["bottom"])))
-(def MarginValue (comp Global Auto Length String))
+(def right (reify
+           Function
+           (invoke [_ element value]
+             (assert (instance? WidthLength value))
+             (t/add-style element "right" value))
+
+           d/DocElement
+           (d/css [_ classes] classes)
+           (d/html [_] ["right"])))
+(def left (reify
+           Function
+           (invoke [_ element value]
+             (assert (instance? WidthLength value))
+             (t/add-style element "left" value))
+
+           d/DocElement
+           (d/css [_ classes] classes)
+           (d/html [_] ["left"])))
+(def top (reify
+           Function
+           (invoke [_ element value]
+             (assert (instance? HeightLength value))
+             (t/add-style element "top" value))
+
+           d/DocElement
+           (d/css [_ classes] classes)
+           (d/html [_] ["top"])))
+(def MarginValue (comp Global Auto Length HeightLength WidthLength String))
 
 (def Normal (enum normal initial inherit unset revert none))
 
@@ -671,7 +698,7 @@
 
 (def FontSizes (enum xx-small x-small small medium large x-large xx-large smaller larger initial inherit unset revert none))
 
-(def FontSize (comp Global Length FontSizes))
+(def FontSize (comp Global Length FontSizes em rem))
 
 (def Boldness (enum normal bold lighter bolder initial inherit unset revert none))
 
@@ -875,11 +902,11 @@
 (t/add-style element "box-sizing" [arg0]))
 
 (defn width [element arg0]
-(assert (instance? Length arg0))
+(assert (instance? WidthLength arg0))
 (t/add-style element "width" [arg0]))
 
 (defn height [element arg0]
-(assert (instance? Length arg0))
+(assert (instance? HeightLength arg0))
 (t/add-style element "height" [arg0]))
 
 (defn color [element arg0]
@@ -954,6 +981,26 @@
 (assert (instance? BorderStyle arg3))
 (assert (instance? BorderStyle arg0))
 (t/add-style element "border-style" [arg2 arg1 arg3 arg0])))
+
+(defn border-size
+([element arg0]
+(assert (instance? BorderWidth arg0))
+(t/add-style element "border-size" [arg0]))
+([element arg1 arg0]
+(assert (instance? BorderWidth arg1))
+(assert (instance? BorderWidth arg0))
+(t/add-style element "border-size" [arg1 arg0]))
+([element arg2 arg1 arg0]
+(assert (instance? BorderWidth arg2))
+(assert (instance? BorderWidth arg1))
+(assert (instance? BorderWidth arg0))
+(t/add-style element "border-size" [arg2 arg1 arg0]))
+([element arg2 arg1 arg3 arg0]
+(assert (instance? BorderWidth arg2))
+(assert (instance? BorderWidth arg1))
+(assert (instance? BorderWidth arg3))
+(assert (instance? BorderWidth arg0))
+(t/add-style element "border-size" [arg2 arg1 arg3 arg0])))
 
 (defn border-width
 ([element arg0]

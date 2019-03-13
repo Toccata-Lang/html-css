@@ -42,7 +42,7 @@
 (def head (html-tag "head"))
 (def body (html-tag "body"))
 (def style (html-tag "style"))
-(def script (html-tag "script"))
+(def script (html-tag "script async"))
 (def a (html-tag "a"))
 (def div (html-tag "div"))
 (def p (html-tag "p"))
@@ -63,6 +63,7 @@
 (def title (html-tag "title"))
 (def meta (html-tag "meta"))
 (def img (html-tag "img"))
+(def image (html-tag "image"))
 (def h1 (html-tag "h1"))
 (def h2 (html-tag "h2"))
 (def h3 (html-tag "h3"))
@@ -70,7 +71,6 @@
 (def h5 (html-tag "h5"))
 (def h6 (html-tag "h6"))
 (def button (html-tag "button"))
-(def svg (html-tag "svg"))
 
 (def nbsp
   (reify d/DocElement

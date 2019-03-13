@@ -34,6 +34,17 @@
     (write-str ["(def " t-name " (comp " (interpose types " ") "))\n\n"])
     t-name))
 
+(defn css-fn [f-name & types]
+  (let [arg-names (map (range (count types)) (partial str "arg"))]
+    (write-str ["(deftype " f-name " [" (interpose arg-names " ") "]\n"
+                (-> types
+                    (zip-lists arg-names)
+                    (map (fn [[type arg]]
+                           ["(assert (instance? " type " " arg "))\n"])))
+                "\nd/DocElement\n(d/html [_]\n[(str \""
+                f-name "(\" " (to-str (interpose arg-names " \",\" ")) " \")\")]))\n\n"])
+    f-name))
+
 (def write-imports
   (write-str ["(add-ns d (module \"document.toc\"))\n"
               "(add-ns t (module \"tag.toc\"))\n"
@@ -70,20 +81,24 @@
 
 (def Auto (css-enum 'Auto 'auto))
 
-(def lengths {'px 'px
-              'vh 'vh
-              'vw 'vw
-              'pt 'pt})
+(def lengths ['px 'pt])
+
+(def special-lengths ['vh
+                      'vw
+                      'rem
+                      'em])
 
 (def write-lengths
   (write-str [";; CSS Lengths\n\n"
-              (map (seq lengths) (fn [[k v]]
+              (map (comp (seq lengths)
+                         (seq special-lengths))
+                   (fn [k]
                                    [
 "(deftype " k " [size]
   (assert (instance? Integer size))
   d/DocElement
   (d/css [_ classes] classes)
-  (d/html [_] [(str size \"" v "\")]))\n\n"]))
+  (d/html [_] [(str size \"" k "\")]))\n\n"]))
 
 "(deftype percent [size]
   (assert (instance? Integer size))
@@ -91,13 +106,15 @@
   (d/css [_ classes] classes)
   (d/html [_] [(str size \"%\")]))\n\n"]))
 
-(def SimpleLength (apply css-comp (cons 'SimpleLength (comp (keys lengths)
+(def SimpleLength (apply css-comp (cons 'SimpleLength (comp (seq lengths)
                                                             ;; TODO: remove when floats work
                                                             (list 'String)))))
 
-(def Length (apply css-comp (cons 'Length (comp (keys lengths)
+(def Length (apply css-comp (cons 'Length (comp (seq lengths)
                                                 ;; TODO: remove when floats work
                                                 (list 'percent 'String)))))
+(def HeightLength (css-comp 'HeightLength Length 'vh))
+(def WidthLength (css-comp 'WidthLength Length 'vw))
 
 (def color-names ['buttonface 'black 'silver 'gray 'white 'maroon 'red 'purple 'fuchsia 'green
                   'lime 'olive 'yellow 'navy 'blue 'teal 'aqua 'orange 'aliceblue 'antiquewhite
@@ -118,7 +135,8 @@
                   'palegreen 'paleturquoise 'palevioletred 'papayawhip 'peachpuff 'peru 'pink 'plum
                   'powderblue 'rosybrown 'royalblue 'saddlebrown 'salmon 'sandybrown 'seagreen 'seashell
                   'sienna 'skyblue 'slateblue 'slategray 'slategrey 'snow 'springgreen 'steelblue 'tan
-                  'thistle 'tomato 'turquoise 'violet 'wheat 'whitesmoke 'yellowgreen 'rebeccapurple])
+                  'thistle 'tomato 'turquoise 'violet 'wheat 'whitesmoke 'yellowgreen 'rebeccapurple
+                  'transparent])
 
 (def write-colors
   (write-str [";; Named colors
@@ -137,16 +155,22 @@
               ;; TODO: validate color string to only contain hex digits
               "(HexColor s))\n\n"]))
 
-(def ColorValue (css-comp 'ColorValue 'HexColor 'NamedColor))
+(def rgba (css-fn 'rgba 'Integer 'Integer 'Integer 'String))
 
-(def style-types ['top 'left 'right 'bottom])
+(def ColorValue (css-comp 'ColorValue 'HexColor 'NamedColor 'rgba))
+
+(def style-types {'top 'HeightLength
+                  'bottom 'HeightLength
+                  'left 'WidthLength
+                  'right 'WidthLength})
 
 (def write-style-types
   (write-str [";; Some types are also style attributes\n\n"
-              (map style-types (fn [v] [ "(def " v " (reify
+              (map (seq style-types)
+                   (fn [[v t]] [ "(def " v " (reify
            Function
            (invoke [_ element value]
-             (assert (instance? Length value))
+             (assert (instance? " t " value))
              (t/add-style element \"" v "\" value))
 
            d/DocElement
@@ -180,7 +204,7 @@
                                  "\n")
                       ")\n\n"])))
 
-(def MarginValue (css-comp 'MarginValue Auto Length 'String))
+(def MarginValue (css-comp 'MarginValue Auto Length HeightLength WidthLength 'String))
 (def Normal (css-enum 'Normal 'normal))
 (def Number (css-comp 'Number 'Integer))
 (def LineHeight (css-comp 'LineHeight Normal Length 'Integer))
@@ -188,7 +212,7 @@
 (def GenericFont (css-enum 'GenericFont 'serif 'sans-serif 'monospace 'cursive 'fantasy 'system-ui))
 (def FontFamily (css-comp 'FontFamily GenericFont 'String))
 (def FontSizes (css-enum 'FontSizes 'xx-small 'x-small 'small 'medium 'large 'x-large 'xx-large 'smaller 'larger))
-(def FontSize (css-comp 'FontSize Length FontSizes))
+(def FontSize (css-comp 'FontSize Length FontSizes 'em 'rem))
 (def Boldness (css-enum 'Boldness 'normal 'bold 'lighter 'bolder))
 (def FontWeight (css-comp 'FontWeight Boldness 'Integer))
 (def Position (css-enum 'Positions 'static 'relative 'absolute 'fixed 'sticky))
@@ -262,8 +286,8 @@
             [BkgPosition BkgPosition])
   (css-attr 'overflow Overflow)
   (css-attr 'box-sizing BoxSizing)
-  (css-attr 'width Length)
-  (css-attr 'height 'Length)
+  (css-attr 'width WidthLength)
+  (css-attr 'height HeightLength)
   (css-attr 'color ColorValue)
   (css-attr 'float Float)
   (css-attr 'flex-direction FlexDir)
@@ -283,6 +307,11 @@
             [BorderStyle BorderStyle]
             [BorderStyle BorderStyle BorderStyle]
             [BorderStyle BorderStyle BorderStyle BorderStyle])
+  (css-attr 'border-size
+            [BorderWidth]
+            [BorderWidth BorderWidth]
+            [BorderWidth BorderWidth BorderWidth]
+            [BorderWidth BorderWidth BorderWidth BorderWidth])
   (css-attr 'border-width
             [BorderWidth]
             [BorderWidth BorderWidth]

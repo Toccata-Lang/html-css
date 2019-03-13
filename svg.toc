@@ -2,7 +2,7 @@
 (add-ns t (module "tag.toc"))
 (add-ns d (module "document.toc"))
 
-(deftype SVGTag [name namespace contents styling attributes class]
+(deftype SVGTag [name contents styling attributes class]
   (assert (instance? t/Classes class))
   (assert (instance? t/Styling styling))
 
@@ -29,14 +29,56 @@
 (defn svg-tag [name]
   (fn tag-constructor
     ([]
-     (SVGTag name "http://www.w3.org/2000/svg" [] t/empty-style {} t/empty-class))
+     (SVGTag name [] t/empty-style {} t/empty-class))
     ([attr-or-tag & contents]
      (let [contents (either (and (instance? HashMap attr-or-tag)
                                  (maybe contents))
                             (cons attr-or-tag contents))]
-       (SVGTag name "http://www.w3.org/2000/svg" (vec contents)
+       (SVGTag name (vec contents)
                t/empty-style
                (either (instance? HashMap attr-or-tag) {})
                t/empty-class)))))
 
+(defn svg
+  ([]
+   (SVGTag "svg" []
+           t/empty-style
+           (assoc {}
+             'xmlns "http://www.w3.org/2000/svg")
+           t/empty-class))
+  ([attr-or-tag & contents]
+   (let [contents (either (and (instance? HashMap attr-or-tag)
+                               (maybe contents))
+                          (cons attr-or-tag contents))]
+     (SVGTag "svg" (vec contents)
+             t/empty-style
+             (assoc (either (instance? HashMap attr-or-tag) {})
+               'xmlns "http://www.w3.org/2000/svg")
+             t/empty-class))))
+
+(defn viewbox [el x y width height]
+  (assert (instance? Integer x))
+  (assert (instance? Integer y))
+  (assert (instance? Integer width))
+  (assert (instance? Integer height))
+
+  (-> el
+      (t/attr 'viewBox (str x " " y " " width " " height))))
+
+(def defs (svg-tag "defs"))
 (def circle (svg-tag "circle"))
+(def g (svg-tag "g"))
+(def image (svg-tag "image"))
+(def text (svg-tag "text"))
+
+(defn path [& segments]
+  (SVGTag "path" []
+            t/empty-style
+            {'d (to-str segments)}
+            t/empty-class))
+
+(defn polygon [& segments]
+  (SVGTag "polygon" []
+            t/empty-style
+            {'points (to-str segments)}
+            t/empty-class))
