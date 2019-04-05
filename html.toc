@@ -42,7 +42,7 @@
 (def head (html-tag "head"))
 (def body (html-tag "body"))
 (def style (html-tag "style"))
-(def script (html-tag "script async"))
+(def script (html-tag "script"))
 (def a (html-tag "a"))
 (def div (html-tag "div"))
 (def p (html-tag "p"))
