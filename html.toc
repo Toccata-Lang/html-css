@@ -56,6 +56,7 @@
 (def menu (html-tag "menu"))
 (def nav (html-tag "nav"))
 (def section (html-tag "section"))
+(def option (html-tag "option"))
 (def ol (html-tag "ol"))
 (def ul (html-tag "ul"))
 (def li (html-tag "li"))
@@ -71,6 +72,9 @@
 (def h5 (html-tag "h5"))
 (def h6 (html-tag "h6"))
 (def button (html-tag "button"))
+(def input (html-tag "input"))
+(def label (html-tag "label"))
+(def form (html-tag "form"))
 
 (def nbsp
   (reify d/DocElement

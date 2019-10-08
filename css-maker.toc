@@ -212,7 +212,7 @@
 (def GenericFont (css-enum 'GenericFont 'serif 'sans-serif 'monospace 'cursive 'fantasy 'system-ui))
 (def FontFamily (css-comp 'FontFamily GenericFont 'String))
 (def FontSizes (css-enum 'FontSizes 'xx-small 'x-small 'small 'medium 'large 'x-large 'xx-large 'smaller 'larger))
-(def FontSize (css-comp 'FontSize Length FontSizes 'em 'rem))
+(def FontSize (css-comp 'FontSize Length FontSizes 'em 'rem 'vw 'vh))
 (def Boldness (css-enum 'Boldness 'normal 'bold 'lighter 'bolder))
 (def FontWeight (css-comp 'FontWeight Boldness 'Integer))
 (def Position (css-enum 'Positions 'static 'relative 'absolute 'fixed 'sticky))
@@ -261,10 +261,10 @@
             [Length Length]
             [Length Length Length]
             [Length Length Length Length])
-  (css-attr 'padding-top Length)
-  (css-attr 'padding-left Length)
-  (css-attr 'padding-right Length)
-  (css-attr 'padding-right Length)
+  (css-attr 'padding-top HeightLength)
+  (css-attr 'padding-bottom HeightLength)
+  (css-attr 'padding-left WidthLength)
+  (css-attr 'padding-right WidthLength)
 
   (css-attr 'line-height LineHeight)
   (css-attr 'z-index Number)

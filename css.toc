@@ -698,7 +698,7 @@ d/DocElement
 
 (def FontSizes (enum xx-small x-small small medium large x-large xx-large smaller larger initial inherit unset revert none))
 
-(def FontSize (comp Global Length FontSizes em rem))
+(def FontSize (comp Global Length FontSizes vh vw em rem))
 
 (def Boldness (enum normal bold lighter bolder initial inherit unset revert none))
 
@@ -812,19 +812,19 @@ d/DocElement
 (t/add-style element "padding" [arg2 arg1 arg3 arg0])))
 
 (defn padding-top [element arg0]
-(assert (instance? Length arg0))
+(assert (instance? HeightLength arg0))
 (t/add-style element "padding-top" [arg0]))
 
+(defn padding-bottom [element arg0]
+(assert (instance? HeightLength arg0))
+(t/add-style element "padding-bottom" [arg0]))
+
 (defn padding-left [element arg0]
-(assert (instance? Length arg0))
+(assert (instance? WidthLength arg0))
 (t/add-style element "padding-left" [arg0]))
 
 (defn padding-right [element arg0]
-(assert (instance? Length arg0))
-(t/add-style element "padding-right" [arg0]))
-
-(defn padding-right [element arg0]
-(assert (instance? Length arg0))
+(assert (instance? WidthLength arg0))
 (t/add-style element "padding-right" [arg0]))
 
 (defn line-height [element arg0]
