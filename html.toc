@@ -88,3 +88,5 @@
 
   (t/add-style [s attr-name value]
     (t/add-style (span s) attr-name value)))
+
+(def attr t/attr)
