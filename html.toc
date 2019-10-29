@@ -82,11 +82,15 @@
     (d/html [_] ["&nbsp;"])))
 
 (extend-type String
-  t/Stylings
+  t/UpdateTag
+  (t/attr [s attr-key value]
+    (t/attr (span s) attr-key value))
+
   (t/add-class [s class]
     (t/add-class (span s) class))
 
   (t/add-style [s attr-name value]
     (t/add-style (span s) attr-name value)))
 
-(def attr t/attr)
+(defn attr [element attr-key value]
+  (t/attr element attr-key value))

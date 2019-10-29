@@ -1,11 +1,16 @@
 
-(deftype DummyTag [styling class])
+(deftype DummyTag [styling class attributes])
 
 (deftype StyleAttribute [name value])
 
-(defprotocol Stylings
+(defprotocol UpdateTag
+  (attr [element attr-key value]
+    (.attributes element (assoc (.attributes element)
+                           attr-key value)))
+
   (add-class [element class]
     (.class element (conj (.class element) class)))
+
   (add-style [element attr-name value]
     (.styling element (-> (.styling element)
                           (remove (fn [style]
@@ -56,7 +61,3 @@
 
 (defn class [name]
   (Class name empty-style))
-
-(defn attr [element attr-key value]
-  (.attributes element (assoc (.attributes element)
-                         attr-key value)))
