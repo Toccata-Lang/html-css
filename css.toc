@@ -406,6 +406,10 @@
   (reify d/DocElement
     (d/css [_ classes] classes)
     (d/html [_] ["line-through"])))
+(def inline-block
+  (reify d/DocElement
+    (d/css [_ classes] classes)
+    (d/html [_] ["inline-block"])))
 
 (def css-wrap
   (reify d/DocElement
@@ -698,7 +702,7 @@ d/DocElement
 
 (def FontSizes (enum xx-small x-small small medium large x-large xx-large smaller larger initial inherit unset revert none))
 
-(def FontSize (comp Global Length FontSizes vh vw em rem))
+(def FontSize (comp Global Length FontSizes em rem vw vh))
 
 (def Boldness (enum normal bold lighter bolder initial inherit unset revert none))
 
@@ -722,7 +726,7 @@ d/DocElement
 
 (def Float (enum left right inline-start inline-end initial inherit unset revert none))
 
-(def Display (enum flex block flow table grid inline run-in ruby list-item initial inherit unset revert none))
+(def Display (enum flex block flow table grid inline run-in ruby list-item inline-block initial inherit unset revert none))
 
 (def FlexDir (enum row column row-reverse column-reverse initial inherit unset revert none))
 
@@ -1069,4 +1073,3 @@ d/DocElement
 (defn display [element arg0]
 (assert (instance? Display arg0))
 (t/add-style element "display" [arg0]))
-
