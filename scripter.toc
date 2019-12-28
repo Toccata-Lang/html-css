@@ -1,0 +1,92 @@
+
+(add-ns rdr (git-dependency "https://github.com/Toccata-Lang/reader.git"
+                            "reader.toc"
+                            :sha "783bbe8"))
+(add-ns fio (git-dependency "https://github.com/Toccata-Lang/file-io.git"
+                            "file-io.toc"
+                            :sha "4b6a964"))
+(add-ns sys (git-dependency "https://github.com/Toccata-Lang/system.git"
+                            "system.toc"
+                            :sha "2978872"))
+(add-ns ev (git-dependency "https://github.com/Toccata-Lang/eval.git"
+                           "eval.toc"
+                           :sha "74c9172"))
+(add-ns interp (git-dependency "https://github.com/Toccata-Lang/eval.git"
+                               "interpreter.toc"
+                               :sha "74c9172"))
+(add-ns tag (module "tag.toc"))
+(add-ns html (module "html.toc"))
+(add-ns css (module "css.toc"))
+(add-ns doc (module "document.toc"))
+(add-ns svg (module "svg.toc"))
+
+(def base-imports [(interp/CompiledNs 'h  (either (get html/symbols 'filename)
+                                                  "")
+                                      html/symbols html/protocols)
+                   (interp/CompiledNs 'tag  (either (get tag/symbols 'filename)
+                                                    "")
+                                      tag/symbols tag/protocols)
+                   (interp/CompiledNs 'svg  (either (get svg/symbols 'filename)
+                                                    "")
+                                      svg/symbols svg/protocols)
+                   (interp/CompiledNs 'doc  (either (get doc/symbols 'filename)
+                                                    "")
+                                      doc/symbols doc/protocols)
+                   (interp/CompiledNs 'c  (either (get css/symbols 'filename)
+                                                  "")
+                                      css/symbols css/protocols)])
+
+(def eval-state
+  (let [core-ns (interp/make-compiled-ns "" (-> symbols
+                                                (assoc 'html-out (fn [x]
+                                                                   (-> x
+                                                                       (doc/html)
+                                                                       (doc/flatten-all)
+                                                                       (fio/stdout))))
+                                                (comp interp/interp-symbols))
+                                         protocols {})
+        import-paths (reduce base-imports {"" ""}
+                             (fn [m import]
+                               (assoc m (.path import) (rdr/tag (.ns-sym import)))))
+        base-imports (reduce base-imports {"" core-ns}
+                             (fn [base-imports compiled]
+                               (assert (instance? CompiledNs compiled))
+
+                               (assoc base-imports
+                                 (.ns-sym compiled)
+                                 (interp/make-compiled-ns (str (.ns-sym compiled))
+                                                          (.syms compiled)
+                                                          (.protos compiled)
+                                                          import-paths))))
+        ns-state (-> base-imports
+                     (vals)
+                     (conj core-ns)
+                     (reduce {} (fn [nss ns]
+                                  (assoc nss (.path ns) ns))))
+        base-syms (map-vals base-imports .syms)]
+    (agent (-> ev/empty-state
+               (.ns ns-state)
+               (assoc-in [.ns "script-file"] (ev/EvalNamespace "script-file" base-syms {}
+                                                               import-paths [{}]))
+               (.base-imports base-syms)
+               (.type-count (interp/type-count))
+               (.file-name "script-file")
+               (.command-line ["script-file"])))))
+
+(main [params]
+  (ev/init ev/universal-proto-fn)
+  (for [file-name (second params)
+        input-file (or (fio/file-in file-name)
+                       (do
+                         (print-err "Coud not read file:" file-name)
+                         nothing))
+        [_ asts] (or (ev/parse {'file-name file-name
+                                'line-number 1}
+                               (lazy-list input-file))
+                     (do
+                       (print-err "Could not parse file into AST's")
+                       nothing))]
+    (or ((ev/eval asts) (extract eval-state))
+        (do
+          (print-err "Could not evaluate AST's")
+          nothing))))
