@@ -66,10 +66,13 @@
       (t/attr 'viewBox (str x " " y " " width " " height))))
 
 (def defs (svg-tag "defs"))
+(def svg-filter (svg-tag "filter"))
+(def feDropShadow (svg-tag "feDropShadow"))
 (def circle (svg-tag "circle"))
 (def g (svg-tag "g"))
 (def image (svg-tag "image"))
 (def text (svg-tag "text"))
+(def line (svg-tag "line"))
 
 (defn path [& segments]
   (SVGTag "path" []

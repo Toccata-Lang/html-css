@@ -75,6 +75,7 @@
 (def input (html-tag "input"))
 (def label (html-tag "label"))
 (def form (html-tag "form"))
+(def br (html-tag "br"))
 
 (def nbsp
   (reify d/DocElement

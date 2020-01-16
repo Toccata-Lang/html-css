@@ -901,6 +901,14 @@ d/DocElement
 (assert (instance? Overflow arg0))
 (t/add-style element "overflow" [arg0]))
 
+(defn overflow-x [element arg0]
+(assert (instance? Overflow arg0))
+(t/add-style element "overflow-x" [arg0]))
+
+(defn overflow-y [element arg0]
+(assert (instance? Overflow arg0))
+(t/add-style element "overflow-y" [arg0]))
+
 (defn box-sizing [element arg0]
 (assert (instance? BoxSizing arg0))
 (t/add-style element "box-sizing" [arg0]))
@@ -1070,6 +1078,15 @@ d/DocElement
 (assert (instance? Integer arg0))
 (t/add-style element "fill-opacity" [arg0]))
 
+(defn flex-grow [element arg0]
+(assert (instance? Integer arg0))
+(t/add-style element "flex-grow" [arg0]))
+
+(defn flex-shrink [element arg0]
+(assert (instance? Integer arg0))
+(t/add-style element "flex-shrink" [arg0]))
+
 (defn display [element arg0]
 (assert (instance? Display arg0))
 (t/add-style element "display" [arg0]))
+

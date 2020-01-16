@@ -17,7 +17,7 @@
           (list coll)))
 
 (defn html-str [x]
-  (apply str (seq (flatten-all (html x)))))
+  (to-str (flatten-all (html x))))
 
 (extend-type Integer
   DocElement

@@ -1,16 +1,16 @@
 
 (add-ns st (git-dependency "https://github.com/Toccata-Lang/stream.git"
                            "stream.toc"
-                           :sha "af43750"))
+                           :sha "c778079"))
 (add-ns fio (git-dependency "https://github.com/Toccata-Lang/file-io.git"
                             "file-io.toc"
-                            :sha "08058d6"))
+                            :sha "4b6a964"))
 
 (def out-strm fio/stdout)
 
 (defprotocol StringWriter
   (write-str [x]
-    (out-strm (str x))))
+    (pr* (str x))))
 
 (extend-type Vector
   StringWriter
@@ -285,6 +285,8 @@
             [BkgPosition]
             [BkgPosition BkgPosition])
   (css-attr 'overflow Overflow)
+  (css-attr 'overflow-x Overflow)
+  (css-attr 'overflow-y Overflow)
   (css-attr 'box-sizing BoxSizing)
   (css-attr 'width WidthLength)
   (css-attr 'height HeightLength)
@@ -328,6 +330,8 @@
   (css-attr 'stroke-width Length)
   (css-attr 'fill ColorValue)
   (css-attr 'fill-opacity 'Integer)
+  (css-attr 'flex-grow 'Integer)
+  (css-attr 'flex-shrink 'Integer)
   (css-attr 'display Display)
 
   (print-err 'done))
