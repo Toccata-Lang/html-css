@@ -11,12 +11,6 @@
     (list "<HTMLTag " (str name) ">"))
 
   d/DocElement
-  (d/expand [_ data]
-    (HTMLTag name
-             (map contents (fn [c]
-                             (d/expand c data)))
-             styling attributes class))
-
   (d/html [t]
     ["\n<" (.name t) " "
      (-> [(d/html (.class t))
@@ -35,15 +29,7 @@
 (deftype data [data-key]
   Stringable
   (string-list [_]
-    (list "<DataSource " (str data-key) ">"))
-
-  d/DocElement
-  (d/expand [_ data]
-    (either (get data data-key)
-            (do
-              (print-err "Cannot extract data for HTML Tag using key:"
-                         (str "'" data-key "'"))
-              (abort)))))
+    (list "<DataSource " (str data-key) ">")))
 
 (deftype formatted-list [template items]
   (assert (instance? Tag template))
@@ -51,11 +37,7 @@
 
   Stringable
   (string-list [_]
-    (list "<FormattedList " (str template) " " (str items) ">"))
-
-  d/DocElement
-  (d/expand [_ data]
-    (map (d/expand items data) (partial d/expand template))))
+    (list "<FormattedList " (str template) " " (str items) ">")))
 
 (defn html-tag [name]
   (fn tag-constructor
