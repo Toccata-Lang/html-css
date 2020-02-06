@@ -228,7 +228,7 @@
 (def FlexDir (css-enum 'FlexDir 'row 'column 'row-reverse 'column-reverse))
 (def FlexWrap (css-enum 'FlexWrap 'css-wrap 'nowrap 'wrap-reverse))
 (def Justify (css-enum 'Justify 'center 'start 'end 'flex-start 'flex-end 'left 'right 'normal
-                       'space-between 'space-around 'space-evenly 'stretch))
+                       'flex-begin 'flex-end 'space-between 'space-around 'space-evenly 'stretch))
 (def Safety (css-enum 'Safety 'safe 'unsafe))
 (def TextAlignment (css-enum 'TextAlignment 'left 'right 'center 'justify 'justify-all 'start 'end 'match-parent))
 (def ItemAlignment (css-enum 'ItemAlignment 'normal 'stretch 'center 'start 'end 'flex-start 'flex-end
@@ -304,6 +304,7 @@
   (css-attr 'max-height MinMaxContent)
   (css-attr 'min-height MinMaxContent)
   (css-attr 'border-color ColorValue)
+
   (css-attr 'border-style
             [BorderStyle]
             [BorderStyle BorderStyle]
@@ -319,6 +320,23 @@
             [BorderWidth BorderWidth]
             [BorderWidth BorderWidth BorderWidth]
             [BorderWidth BorderWidth BorderWidth BorderWidth])
+
+  (css-attr 'border-bottom-style [BorderStyle])
+  (css-attr 'borde-bottomr-size [BorderWidth])
+  (css-attr 'borde-bottomr-width [BorderWidth])
+
+  (css-attr 'border-top-style [BorderStyle])
+  (css-attr 'borde-topr-size [BorderWidth])
+  (css-attr 'borde-topr-width [BorderWidth])
+
+  (css-attr 'border-left-style [BorderStyle])
+  (css-attr 'borde-leftr-size [BorderWidth])
+  (css-attr 'borde-leftr-width [BorderWidth])
+
+  (css-attr 'border-right-style [BorderStyle])
+  (css-attr 'borde-rightr-size [BorderWidth])
+  (css-attr 'borde-rightr-width [BorderWidth])
+
   (css-attr 'border-radius
             [Length]
             [Length Length]

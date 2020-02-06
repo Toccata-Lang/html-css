@@ -34,7 +34,10 @@
                                       doc/symbols doc/protocols)
                    (interp/CompiledNs 'c  (either (get css/symbols 'filename)
                                                   "")
-                                      css/symbols css/protocols)])
+                                      css/symbols css/protocols)
+                   (interp/CompiledNs 'fio  (either (get fio/symbols 'filename)
+                                                    "")
+                                      fio/symbols fio/protocols)])
 
 (def eval-state
   (let [core-ns (interp/make-compiled-ns "" (-> symbols
@@ -78,7 +81,7 @@
   (for [file-name (second params)
         input-file (or (fio/file-in file-name)
                        (do
-                         (print-err "Coud not read file:" file-name)
+                         (print-err "Could not read file:" file-name)
                          nothing))
         [_ asts] (or (ev/parse {'file-name file-name
                                 'line-number 1}

@@ -8,9 +8,15 @@
 
   Stringable
   (string-list [_]
-    (list "<Tag " (str name) ">"))
+    (list "<HTMLTag " (str name) ">"))
 
   d/DocElement
+  (d/expand [_ data]
+    (HTMLTag name
+             (map contents (fn [c]
+                             (d/expand c data)))
+             styling attributes class))
+
   (d/html [t]
     ["\n<" (.name t) " "
      (-> [(d/html (.class t))
@@ -25,6 +31,31 @@
 
   (d/css [t classes]
     (d/css (.contents t) (d/css (.class t) classes))))
+
+(deftype data [data-key]
+  Stringable
+  (string-list [_]
+    (list "<DataSource " (str data-key) ">"))
+
+  d/DocElement
+  (d/expand [_ data]
+    (either (get data data-key)
+            (do
+              (print-err "Cannot extract data for HTML Tag using key:"
+                         (str "'" data-key "'"))
+              (abort)))))
+
+(deftype formatted-list [template items]
+  (assert (instance? Tag template))
+  (assert (instance? DataSource items))
+
+  Stringable
+  (string-list [_]
+    (list "<FormattedList " (str template) " " (str items) ">"))
+
+  d/DocElement
+  (d/expand [_ data]
+    (map (d/expand items data) (partial d/expand template))))
 
 (defn html-tag [name]
   (fn tag-constructor
@@ -78,9 +109,13 @@
 (def br (html-tag "br"))
 
 (def nbsp
-  (reify d/DocElement
-    (d/css [_ classes] classes)
-    (d/html [_] ["&nbsp;"])))
+  (reify
+   Stringable
+   (string-list [_] (list "&nbsp;"))
+
+   d/DocElement
+   (d/css [_ classes] classes)
+   (d/html [_] ["&nbsp;"])))
 
 (extend-type String
   t/UpdateTag

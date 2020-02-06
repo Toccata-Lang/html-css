@@ -732,7 +732,7 @@ d/DocElement
 
 (def FlexWrap (enum css-wrap nowrap wrap-reverse initial inherit unset revert none))
 
-(def Justify (enum center start end flex-start flex-end left right normal space-between space-around space-evenly stretch initial inherit unset revert none))
+(def Justify (enum center start end flex-start flex-end left right normal flex-begin flex-end space-between space-around space-evenly stretch initial inherit unset revert none))
 
 (def Safety (enum safe unsafe initial inherit unset revert none))
 
@@ -1033,6 +1033,54 @@ d/DocElement
 (assert (instance? BorderWidth arg3))
 (assert (instance? BorderWidth arg0))
 (t/add-style element "border-width" [arg2 arg1 arg3 arg0])))
+
+(defn border-bottom-style [element arg0]
+(assert (instance? BorderStyle arg0))
+(t/add-style element "border-bottom-style" [arg0]))
+
+(defn borde-bottomr-size [element arg0]
+(assert (instance? BorderWidth arg0))
+(t/add-style element "borde-bottomr-size" [arg0]))
+
+(defn borde-bottomr-width [element arg0]
+(assert (instance? BorderWidth arg0))
+(t/add-style element "borde-bottomr-width" [arg0]))
+
+(defn border-top-style [element arg0]
+(assert (instance? BorderStyle arg0))
+(t/add-style element "border-top-style" [arg0]))
+
+(defn borde-topr-size [element arg0]
+(assert (instance? BorderWidth arg0))
+(t/add-style element "borde-topr-size" [arg0]))
+
+(defn borde-topr-width [element arg0]
+(assert (instance? BorderWidth arg0))
+(t/add-style element "borde-topr-width" [arg0]))
+
+(defn border-left-style [element arg0]
+(assert (instance? BorderStyle arg0))
+(t/add-style element "border-left-style" [arg0]))
+
+(defn borde-leftr-size [element arg0]
+(assert (instance? BorderWidth arg0))
+(t/add-style element "borde-leftr-size" [arg0]))
+
+(defn borde-leftr-width [element arg0]
+(assert (instance? BorderWidth arg0))
+(t/add-style element "borde-leftr-width" [arg0]))
+
+(defn border-right-style [element arg0]
+(assert (instance? BorderStyle arg0))
+(t/add-style element "border-right-style" [arg0]))
+
+(defn borde-rightr-size [element arg0]
+(assert (instance? BorderWidth arg0))
+(t/add-style element "borde-rightr-size" [arg0]))
+
+(defn borde-rightr-width [element arg0]
+(assert (instance? BorderWidth arg0))
+(t/add-style element "borde-rightr-width" [arg0]))
 
 (defn border-radius
 ([element arg0]
