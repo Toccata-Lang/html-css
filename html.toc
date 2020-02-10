@@ -8,7 +8,7 @@
 
   Stringable
   (string-list [_]
-    (list "<HTMLTag " (str name) ">"))
+    (list "<HTMLTag " (str name) "\n" (to-str contents) ">"))
 
   d/DocElement
   (d/html [t]
@@ -112,3 +112,17 @@
 
 (defn attr [element attr-key value]
   (t/attr element attr-key value))
+
+(def SymbolOrString (comp String
+                          Symbol))
+
+(defn event-handler [element event-name handler]
+  (assert (instance? SymbolOrString event-name))
+
+  ;; TODO: would be nice if this was a constraint
+  (and (< 0 (get-refs handler))
+       (do
+         (print-err "HTML event handler must be defined at the top level in a 'def' expression")
+         (abort)))
+
+  (.attributes element (assoc (.attributes element) (str "on" event-name) handler)))
