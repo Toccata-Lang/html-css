@@ -115,6 +115,7 @@
                                                 (list 'percent 'String)))))
 (def HeightLength (css-comp 'HeightLength Length 'vh))
 (def WidthLength (css-comp 'WidthLength Length 'vw))
+(def HeightWidthLength (css-comp 'HeightWdithLength HeightLength WidthLength))
 
 (def color-names ['buttonface 'black 'silver 'gray 'white 'maroon 'red 'purple 'fuchsia 'green
                   'lime 'olive 'yellow 'navy 'blue 'teal 'aqua 'orange 'aliceblue 'antiquewhite
@@ -338,10 +339,10 @@
   (css-attr 'borde-rightr-width [BorderWidth])
 
   (css-attr 'border-radius
-            [Length]
-            [Length Length]
-            [Length Length Length]
-            [Length Length Length Length])
+            [HeightWidthLength]
+            [HeightWidthLength HeightWidthLength]
+            [HeightWidthLength HeightWidthLength HeightWidthLength]
+            [HeightWidthLength HeightWidthLength HeightWidthLength HeightWidthLength])
   (css-attr 'list-style-type ListStyle)
   (css-attr 'list-style-Position ListPosition)
   (css-attr 'stroke ColorValue)

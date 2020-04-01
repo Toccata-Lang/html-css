@@ -472,6 +472,8 @@
 
 (def WidthLength (comp Global Length vw))
 
+(def HeightWdithLength (comp Global HeightLength WidthLength))
+
 ;; Named colors
 (deftype NamedColor [color]
   d/DocElement
@@ -637,14 +639,14 @@
 (defn hex-color [s] (HexColor s))
 
 (deftype rgba [arg0 arg1 arg2 arg3]
-(assert (instance? Integer arg0))
-(assert (instance? Integer arg1))
-(assert (instance? Integer arg2))
-(assert (instance? String arg3))
+  (assert (instance? Integer arg0))
+  (assert (instance? Integer arg1))
+  (assert (instance? Integer arg2))
+  (assert (instance? String arg3))
 
-d/DocElement
-(d/html [_]
-[(str "rgba(" arg0 "," arg1 "," arg2 "," arg3 ")")]))
+  d/DocElement
+  (d/html [_]
+    [(str "rgba(" arg0 "," arg1 "," arg2 "," arg3 ")")]))
 
 (def ColorValue (comp Global HexColor NamedColor rgba))
 
@@ -1084,22 +1086,22 @@ d/DocElement
 
 (defn border-radius
 ([element arg0]
-(assert (instance? Length arg0))
+(assert (instance? HeightWdithLength arg0))
 (t/add-style element "border-radius" [arg0]))
 ([element arg1 arg0]
-(assert (instance? Length arg1))
-(assert (instance? Length arg0))
+(assert (instance? HeightWdithLength arg1))
+(assert (instance? HeightWdithLength arg0))
 (t/add-style element "border-radius" [arg1 arg0]))
 ([element arg2 arg1 arg0]
-(assert (instance? Length arg2))
-(assert (instance? Length arg1))
-(assert (instance? Length arg0))
+(assert (instance? HeightWdithLength arg2))
+(assert (instance? HeightWdithLength arg1))
+(assert (instance? HeightWdithLength arg0))
 (t/add-style element "border-radius" [arg2 arg1 arg0]))
 ([element arg2 arg1 arg3 arg0]
-(assert (instance? Length arg2))
-(assert (instance? Length arg1))
-(assert (instance? Length arg3))
-(assert (instance? Length arg0))
+(assert (instance? HeightWdithLength arg2))
+(assert (instance? HeightWdithLength arg1))
+(assert (instance? HeightWdithLength arg3))
+(assert (instance? HeightWdithLength arg0))
 (t/add-style element "border-radius" [arg2 arg1 arg3 arg0])))
 
 (defn list-style-type [element arg0]
