@@ -105,7 +105,9 @@
 (extend-type t/StyleAttribute
   DocElement
   (html [t]
-    [(.name t) ": " (vec (interpose (html (.value t)) " "))]))
+    (either (and (= "" (.name t))
+                 (maybe (html (.value t))))
+            [(.name t) ": " (vec (interpose (html (.value t)) " "))])))
 
 (extend-type t/Styling
   DocElement

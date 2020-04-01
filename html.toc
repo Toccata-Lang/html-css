@@ -12,24 +12,34 @@
 
   d/DocElement
   (d/html [t]
-    ["\n<" (.name t) " "
-     (-> [(d/html (.class t))
-          (d/html (.attributes t))
-          (d/html (.styling t))]
-         (remove empty?)
-         (interpose "\n")
-         vec)
-     (either (and (empty? (.contents t))
-                  (maybe "/>"))
-             [">" (d/html (.contents t)) "\n</" (.name t) ">"])])
+    (let [t (either (map (or (get (.attributes t) "style")
+                             (get (.attributes t) 'style))
+                         (fn [style-attr]
+                           (t/add-style t "" style-attr)))
+                    t)]
+      ["\n<" (.name t) " "
+       (-> [(d/html (.class t))
+            (d/html (dissoc (.attributes t) "style" 'style))
+            (d/html (.styling t))]
+           (remove empty?)
+           (interpose "\n")
+           vec)
+       (either (and (empty? (.contents t))
+                    (maybe "/>"))
+               [">" (d/html (.contents t)) "\n</" (.name t) ">"])]))
 
   (d/css [t classes]
     (d/css (.contents t) (d/css (.class t) classes))))
 
-(deftype data [data-key]
+(deftype TemplateData [data-key default]
   Stringable
   (string-list [_]
-    (list "<DataSource " (str data-key) ">")))
+    (list (either (map default (partial str data-key ":"))
+                  (str "<DataSource " data-key ">")))))
+
+(defn data
+  ([data-key] (TemplateData data-key nothing))
+  ([data-key default] (TemplateData data-key (maybe default))))
 
 (deftype formatted-list [template items]
   (assert (instance? Tag template))
@@ -113,16 +123,8 @@
 (defn attr [element attr-key value]
   (t/attr element attr-key value))
 
+(defn class [nom]
+  (t/class nom))
+
 (def SymbolOrString (comp String
                           Symbol))
-
-(defn event-handler [element event-name handler]
-  (assert (instance? SymbolOrString event-name))
-
-  ;; TODO: would be nice if this was a constraint
-  (and (< 0 (get-refs handler))
-       (do
-         (print-err "HTML event handler must be defined at the top level in a 'def' expression")
-         (abort)))
-
-  (.attributes element (assoc (.attributes element) (str "on" event-name) handler)))
